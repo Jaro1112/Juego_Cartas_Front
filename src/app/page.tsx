@@ -1,95 +1,210 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+
+import React, { useState } from 'react';
+import GameBoard from '../components/GameBoard';
+import MainMenu from '../components/MainMenu';
+import Rules from '../components/Rules';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { EfectoTipo, Card, Player, GameState } from '../Types';
+ // eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { iniciarPartida, jugarCarta, robarCarta } from '../api/gameApi';
+
+ // eslint-disable-next-line @typescript-eslint/no-unused-vars
+const efectos: Record<EfectoTipo, (state: GameState, currentPlayer: 'player1' | 'player2', otherPlayer: 'player1' | 'player2') => GameState> = {
+  QUEMAR: (state, _currentPlayer, otherPlayer) => {
+    return {
+      ...state,
+      [otherPlayer]: {
+        ...state[otherPlayer],
+        life: state[otherPlayer].life - 2
+      },
+      log: [...state.log, `${state[otherPlayer].name} recibió 2 de daño adicional por quemadura.`]
+    };
+  },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  CURAR: (state, currentPlayer, _otherPlayer) => {
+    return {
+      ...state,
+      [currentPlayer]: {
+        ...state[currentPlayer],
+        life: Math.min(state[currentPlayer].life + 3, 20)
+      },
+      log: [...state.log, `${state[currentPlayer].name} se curó 3 puntos de vida.`]
+    };
+  },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  ROBAR_CARTA: (state, currentPlayer, _otherPlayer) => {
+    if (state[currentPlayer].deck.length > 0) {
+      const [newCard, ...restDeck] = state[currentPlayer].deck;
+      return {
+        ...state,
+        [currentPlayer]: {
+          ...state[currentPlayer],
+          hand: [...state[currentPlayer].hand, newCard],
+          deck: restDeck
+        },
+        log: [...state.log, `${state[currentPlayer].name} robó una carta adicional.`]
+      };
+    }
+    return state;
+  }
+};
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [gameState, setGameState] = useState<GameState>({
+    id: 0, // Añadimos un id inicial
+    player1: { name: 'Jugador 1', life: 20, hand: [], deck: [] },
+    player2: { name: 'Jugador 2', life: 20, hand: [], deck: [] },
+    currentTurn: 1,
+    log: [],
+    ganador: null,
+    playedCards: { player1: null, player2: null }
+  });
+  const [showMenu, setShowMenu] = useState(true);
+  const [showRules, setShowRules] = useState(false);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+  const handleStartGame = async () => {
+    try {
+      console.log('Iniciando partida...');
+      const partida = await iniciarPartida(1, 2); // Asume IDs de jugadores 1 y 2
+      console.log('Partida iniciada:', partida);
+      if (!partida || !partida.id) {
+        throw new Error('La respuesta del servidor no contiene los datos esperados');
+      }
+      const newGameState = {
+        id: partida.id,
+        player1: { 
+          name: partida.jugador1.username, 
+          life: partida.jugador1.vida, 
+          hand: partida.cartasJugador1 || [], 
+          deck: [] 
+        },
+        player2: { 
+          name: partida.jugador2.username, 
+          life: partida.jugador2.vida, 
+          hand: partida.cartasJugador2 || [], 
+          deck: [] 
+        },
+        currentTurn: partida.turnoActual,
+        log: [],
+        ganador: null,
+        playedCards: { player1: null, player2: null }
+      };
+      console.log('Nuevo estado del juego:', newGameState);
+      setGameState(newGameState);
+      setShowMenu(false);
+      console.log('Menú oculto, juego iniciado');
+    } catch (error) {
+      console.error('Error al iniciar la partida:', error);
+      // Aquí podrías mostrar un mensaje de error al usuario
+    }
+  };
+
+  const handleShowRules = () => {
+    setShowRules(true);
+    setShowMenu(false);
+  };
+
+  const handleBackToMenu = () => {
+    setShowRules(false);
+    setShowMenu(true);
+  };
+
+  const handlePlayCard = async (playerId: number, cardId: number) => {
+    try {
+      const updatedGameState = await jugarCarta(gameState.id, playerId, cardId);
+      setGameState(updatedGameState);
+    } catch (error) {
+      console.error('Error al jugar la carta:', error);
+    }
+  };
+
+  const handleDrawCard = async (playerId: number) => {
+    try {
+      const updatedGameState = await robarCarta(gameState.id, playerId);
+      setGameState(updatedGameState);
+    } catch (error) {
+      console.error('Error al robar la carta:', error);
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const calcularDaño = (cartaAtacante: Card, cartaDefensora: Card | null): number => {
+    let daño = cartaAtacante.poder;
+    
+    if (cartaDefensora) {
+      // Implementar ventajas/desventajas elementales
+      if (
+        (cartaAtacante.elemento === 'FUEGO' && cartaDefensora.elemento === 'TIERRA') ||
+        (cartaAtacante.elemento === 'AGUA' && cartaDefensora.elemento === 'FUEGO') ||
+        (cartaAtacante.elemento === 'TIERRA' && cartaDefensora.elemento === 'RAYO') ||
+        (cartaAtacante.elemento === 'RAYO' && cartaDefensora.elemento === 'AGUA') ||
+        (cartaAtacante.elemento === 'AIRE' && cartaDefensora.elemento === 'TIERRA')
+      ) {
+        daño += 2;
+      } else if (
+        (cartaDefensora.elemento === 'FUEGO' && cartaAtacante.elemento === 'TIERRA') ||
+        (cartaDefensora.elemento === 'AGUA' && cartaAtacante.elemento === 'FUEGO') ||
+        (cartaDefensora.elemento === 'TIERRA' && cartaAtacante.elemento === 'RAYO') ||
+        (cartaDefensora.elemento === 'RAYO' && cartaAtacante.elemento === 'AGUA') ||
+        (cartaDefensora.elemento === 'AIRE' && cartaAtacante.elemento === 'TIERRA')
+      ) {
+        daño -= 1;
+      }
+    }
+    
+    return Math.max(daño, 0);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const verificarEstadoJuego = (state: GameState): GameState => {
+    if (state.player1.life <= 0) {
+      return { ...state, ganador: 'player2' };
+    } else if (state.player2.life <= 0) {
+      return { ...state, ganador: 'player1' };
+    }
+    return state;
+  };
+
+  // Función para crear el mazo inicial
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const createInitialDeck = (): Card[] => {
+    const elementos = ['FUEGO', 'AGUA', 'TIERRA', 'AIRE', 'RAYO'];
+    const efectos: (EfectoTipo | null)[] = ['QUEMAR', 'CURAR', 'ROBAR_CARTA', null];
+    const deck: Card[] = [];
+
+    for (let i = 0; i < 40; i++) {
+      deck.push({
+        id: i,
+        elemento: elementos[Math.floor(Math.random() * elementos.length)],
+        poder: Math.floor(Math.random() * 5) + 1,
+        efecto: efectos[Math.floor(Math.random() * efectos.length)]
+      });
+    }
+
+    return deck.sort(() => Math.random() - 0.5); // Mezclar el mazo
+  };
+
+  if (showMenu) {
+    return <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />;
+  }
+
+  if (showRules) {
+    return <Rules onBack={handleBackToMenu} />;
+  }
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <GameBoard 
+        player1={gameState.player1}
+        player2={gameState.player2}
+        currentTurn={gameState.currentTurn}
+        onPlayCard={handlePlayCard}
+        onDrawCard={handleDrawCard}
+        log={gameState.log}
+        ganador={gameState.ganador}
+        playedCards={gameState.playedCards}
+      />
+    </main>
   );
 }

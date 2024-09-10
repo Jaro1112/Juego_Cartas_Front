@@ -1,0 +1,74 @@
+import { API_BASE_URL } from '../config';
+import { GameState, PartidaBackend } from '../Types';
+
+export const iniciarPartida = async (jugador1Id: number, jugador2Id: number) => {
+  try {
+    console.log('Iniciando partida con URL:', `/api/juego/iniciar`);
+    const response = await fetch(`/api/juego/iniciar`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + btoa('123:123')
+      },
+      body: JSON.stringify({ jugador1Id, jugador2Id }),
+    });
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
+    }
+    const data = await response.json();
+    console.log('Respuesta del servidor:', data);
+    return data;
+  } catch (error) {
+    console.error('Error detallado en iniciarPartida:', error);
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      console.error('Error de red: Asegúrate de que el backend esté en funcionamiento y accesible.');
+    }
+    throw error;
+  }
+};
+
+export const jugarCarta = async (partidaId: number, jugadorId: number, cartaId: number) => {
+  const response = await fetch(`${API_BASE_URL}/juego/jugar-carta`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ partidaId, jugadorId, cartaId }),
+  });
+  return response.json();
+};
+
+export const robarCarta = async (partidaId: number, jugadorId: number): Promise<GameState> => {
+  const response = await fetch(`${API_BASE_URL}/juego/robar-carta`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ partidaId, jugadorId }),
+  });
+  const partida = await response.json();
+  return convertirPartidaAGameState(partida);
+};
+
+function convertirPartidaAGameState(partida: PartidaBackend): GameState {
+  return {
+    id: partida.id,
+    player1: {
+      name: partida.jugador1.username,
+      life: partida.jugador1.vida,
+      hand: partida.cartasJugador1,
+      deck: []
+    },
+    player2: {
+      name: partida.jugador2.username,
+      life: partida.jugador2.vida,
+      hand: partida.cartasJugador2,
+      deck: []
+    },
+    currentTurn: partida.turnoActual,
+    log: [],
+    ganador: partida.estado === 'TERMINADO' ? (partida.jugador1.vida > 0 ? 'player1' : 'player2') : null,
+    playedCards: { player1: null, player2: null }
+  };
+}

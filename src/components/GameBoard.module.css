@@ -1,0 +1,65 @@
+.gameBoard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: #f0f0f0;
+  border-radius: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.playerArea {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.centerArea {
+  width: 100%;
+  text-align: center;
+  margin: 20px 0;
+  padding: 10px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+}
+
+.turnIndicator {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #333;
+}
+
+.playArea {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.playedCard {
+  width: 100px;
+  height: 150px;
+  border: 1px solid #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+}
+
+
+.playButton {
+  padding: 10px 20px;
+  font-size: 1em;
+  cursor: pointer;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+.playButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}

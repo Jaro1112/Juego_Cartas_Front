@@ -40,3 +40,31 @@ a {
     color-scheme: dark;
   }
 }
+
+.game-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.hand {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.card {
+  border: 1px solid #000;
+  padding: 10px;
+  margin: 0 10px;
+  width: 100px;
+}
+
+.player-info {
+  margin: 10px 0;
+}
+
+.center-area {
+  margin: 20px 0;
+}

@@ -1,0 +1,18 @@
+.hand {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  transition: opacity 0.3s ease;
+}
+
+.active {
+  opacity: 1;
+}
+
+.inactive {
+  opacity: 0.6;
+  pointer-events: none;
+}
