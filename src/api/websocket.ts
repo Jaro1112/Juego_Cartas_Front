@@ -26,6 +26,7 @@ export function connectWebSocket(onConnect: () => void, onError: () => void) {
   client.activate();
 }
 
+
 export function disconnectWebSocket() {
   if (client) {
     client.deactivate();

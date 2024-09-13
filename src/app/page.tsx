@@ -76,38 +76,43 @@ export default function Home() {
       if (!usuario || !usuario.username) {
         throw new Error('No hay usuario logueado o falta el nombre de usuario');
       }
-
+  
       setBuscandoOponente(true);
       setTiempoEspera(30);
       setSearchCancelled(false);
-
+  
       console.log('Creando o obteniendo usuario...');
       const nuevoUsuario = await crearOObtenerUsuario(usuario.username);
       setUsuario(nuevoUsuario);
       console.log('Usuario creado/obtenido:', nuevoUsuario);
-
+  
       if (!nuevoUsuario.id) {
         throw new Error('No se pudo obtener un ID de usuario válido');
       }
-
-      connectWebSocket(
-        () => {
-          subscribeToEmparejamiento((partida) => {
-            if (partida) {
-              handlePartidaIniciada(partida);
-            }
-          });
-          buscarOponente(nuevoUsuario.id, (remainingTime) => {
-            setTiempoEspera(remainingTime);
-          });
-        },
-        () => {
-          console.error('Error al conectar WebSocket en handleStartGame');
-          setBuscandoOponente(false);
-          setTiempoEspera(0);
-        }
-      );
-
+  
+      await new Promise<void>((resolve, reject) => {
+        connectWebSocket(
+          () => {
+            console.log('WebSocket conectado en handleStartGame');
+            subscribeToEmparejamiento((partida) => {
+              if (partida) {
+                handlePartidaIniciada(partida);
+              }
+            });
+            buscarOponente(nuevoUsuario.id, (remainingTime) => {
+              setTiempoEspera(remainingTime);
+            });
+            resolve();
+          },
+          () => {
+            console.error('Error al conectar WebSocket en handleStartGame');
+            setBuscandoOponente(false);
+            setTiempoEspera(0);
+            reject(new Error('Error al conectar WebSocket'));
+          }
+        );
+      });
+  
       // Esperar 30 segundos antes de iniciar la partida con un bot
       searchTimeoutRef.current = setTimeout(async () => {
         if (!searchCancelled) {
@@ -117,7 +122,7 @@ export default function Home() {
           handlePartidaIniciada(partida);
         }
       }, 30000);
-
+  
     } catch (error) {
       console.error('Error al iniciar la partida:', error);
       setBuscandoOponente(false);
