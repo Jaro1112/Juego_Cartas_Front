@@ -62,6 +62,7 @@ export default function Home() {
   const [buscandoOponente, setBuscandoOponente] = useState(false);
   const [tiempoEspera, setTiempoEspera] = useState(30);
   const [searchCancelled, setSearchCancelled] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -298,23 +299,34 @@ export default function Home() {
 
   useEffect(() => {
     const connectWithRetry = () => {
-      connectWebSocket(() => {
-        console.log('WebSocket conectado');
-      }, () => {
-        console.log('Error al conectar WebSocket, reintentando en 5 segundos...');
-        setTimeout(connectWithRetry, 5000);
-      });
+      connectWebSocket(
+        () => {
+          console.log('WebSocket conectado');
+          setIsConnected(true);
+          if (gameState) {
+            subscribeToPartida(gameState.id, (data) => {
+              console.log('Datos recibidos de la partida:', data);
+              // Aquí puedes manejar los datos recibidos de la partida
+            });
+          }
+        },
+        () => {
+          console.log('Error al conectar WebSocket, reintentando en 5 segundos...');
+          setTimeout(connectWithRetry, 5000);
+        }
+      );
     };
   
     connectWithRetry();
   
     return () => {
       disconnectWebSocket();
+      setIsConnected(false);
     };
-  }, []);
-
+  }, [gameState]);
+  
   useEffect(() => {
-    if (gameState) {
+    if (gameState && isConnected) {
       const unsubscribe = subscribeToPartida(gameState.id, (data) => {
         if (data.tipo === 'RENDICION') {
           const surrenderingPlayerId = data.jugadorRendidoId;
@@ -341,7 +353,7 @@ export default function Home() {
         if (unsubscribe) unsubscribe();
       };
     }
-  }, [gameState]);
+  }, [gameState, isConnected]);
 
   if (!usuario) {
     return <LoginRegister onLogin={handleLogin} />;

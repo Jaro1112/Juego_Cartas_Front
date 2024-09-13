@@ -5,7 +5,7 @@ import { PartidaWebSocket } from '../Types';
 interface PartidaEvent {
   tipo: string;
   jugadorRendidoId?: number;
-  // Añade aquí otras propiedades que pueda tener el evento
+  
 }
 
 let client: Client | null = null;
