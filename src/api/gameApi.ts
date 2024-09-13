@@ -52,20 +52,22 @@ function convertirPartidaAGameState(partida: PartidaBackend): GameState {
   return {
     id: partida.id,
     player1: {
+      id: partida.jugador1.id,
       name: partida.jugador1.username,
-      life: 20, // Establecer la vida a 20 al inicio de cada partida
+      life: partida.jugador1.vida ?? 20, // Use nullish coalescing operator
       hand: partida.cartasJugador1,
       deck: []
     },
     player2: {
+      id: partida.jugador2.id,
       name: partida.jugador2.username,
-      life: 20, // Establecer la vida a 20 al inicio de cada partida
+      life: partida.jugador2.vida ?? 20, // Use nullish coalescing operator
       hand: partida.cartasJugador2,
       deck: []
     },
     currentTurn: partida.turnoActual,
     log: [],
-    ganador: partida.estado === 'TERMINADO' ? (partida.jugador1.vida > 0 ? 'player1' : 'player2') : null,
+    ganador: partida.estado === 'TERMINADO' ? (partida.jugador1.vida ?? 0 > 0 ? 'player1' : 'player2') : null,
     playedCards: { player1: null, player2: null }
   };
 }
