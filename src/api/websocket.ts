@@ -13,6 +13,7 @@ const client = new Client({
   reconnectDelay: 5000,
   heartbeatIncoming: 4000,
   heartbeatOutgoing: 4000,
+  webSocketFactory: () => new WebSocket(API_BASE_URL.replace('https://', 'wss://') + '/ws'),
 });
 
 client.onConnect = function (frame) {
