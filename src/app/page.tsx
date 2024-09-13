@@ -66,10 +66,10 @@ export default function Home() {
 
   const handleStartGame = async () => {
     try {
-      if (!usuario) {
-        throw new Error('No hay usuario logueado');
+      if (!usuario || !usuario.id) {
+        throw new Error('No hay usuario logueado o el ID del usuario es inválido');
       }
-      console.log('Iniciando partida...');
+      console.log('Iniciando partida con usuario ID:', usuario.id);
       const partida = await iniciarPartida(usuario.id);
       console.log('Partida iniciada:', partida);
       if (!partida || !partida.id) {

@@ -3,8 +3,8 @@ import { GameState, PartidaBackend } from '../Types';
 
 export const iniciarPartida = async (jugadorId: number) => {
   try {
-    console.log('Iniciando partida con URL:', `/api/juego/iniciar`);
-    const response = await fetch(`/api/juego/iniciar`, {
+    console.log('Iniciando partida con URL:', `${API_BASE_URL}/api/juego/iniciar`);
+    const response = await fetch(`${API_BASE_URL}/api/juego/iniciar`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
