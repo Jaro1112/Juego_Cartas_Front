@@ -8,7 +8,7 @@ import MainMenu from '../components/MainMenu';
 import Rules from '../components/Rules';
 import LoginRegister from '../components/LoginRegister';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EfectoTipo, Card, Player, GameState, Usuario, PartidaBackend } from '../Types';
+import { EfectoTipo, Card, Player, GameState, Usuario, PartidaBackend, PartidaWebSocket } from '../Types';
 import { iniciarPartida, jugarCarta, robarCarta, crearOObtenerUsuario, rendirse } from '../api/gameApi';
 import { connectWebSocket, disconnectWebSocket, subscribeToEmparejamiento, buscarOponente } from '../api/websocket';
 
@@ -114,34 +114,34 @@ export default function Home() {
     }
   };
 
-  const handlePartidaIniciada = (partida: PartidaBackend) => {
+  const handlePartidaIniciada = (partida: PartidaBackend | PartidaWebSocket) => {
     setBuscandoOponente(false);
     setTiempoEspera(0);
-  
+
     if (!partida || !partida.id) {
       throw new Error('La respuesta del servidor no contiene los datos esperados');
     }
-  
+
     const newGameState: GameState = {
       id: partida.id,
       player1: { 
         name: partida.jugador1.username, 
-        life: 20, // Establecer la vida a 20 al inicio de cada partida
-        hand: partida.cartasJugador1 || [], 
+        life: 20,
+        hand: 'cartasJugador1' in partida ? partida.cartasJugador1 : [], 
         deck: [] 
       },
       player2: { 
         name: partida.jugador2.username, 
-        life: 20, // Establecer la vida a 20 al inicio de cada partida
-        hand: partida.cartasJugador2 || [], 
+        life: 20,
+        hand: 'cartasJugador2' in partida ? partida.cartasJugador2 : [], 
         deck: [] 
       },
-      currentTurn: partida.turnoActual,
+      currentTurn: typeof partida.turnoActual === 'string' ? parseInt(partida.turnoActual) : partida.turnoActual,
       log: [],
       ganador: null,
       playedCards: { player1: null, player2: null }
     };
-  
+
     setGameState(newGameState);
     setShowMenu(false);
   };
