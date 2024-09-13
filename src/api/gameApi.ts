@@ -69,3 +69,22 @@ function convertirPartidaAGameState(partida: PartidaBackend): GameState {
     playedCards: { player1: null, player2: null }
   };
 }
+
+export const crearOObtenerUsuario = async (username: string) => {
+  try {
+    const response = await fetch(`/api/usuarios`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username }),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Error al crear o obtener usuario:', error);
+    throw error;
+  }
+};

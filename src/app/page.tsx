@@ -7,7 +7,7 @@ import Rules from '../components/Rules';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { EfectoTipo, Card, Player, GameState } from '../Types';
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { iniciarPartida, jugarCarta, robarCarta } from '../api/gameApi';
+import { iniciarPartida, jugarCarta, robarCarta, crearOObtenerUsuario } from '../api/gameApi';
 import { connectWebSocket, disconnectWebSocket } from '../api/websocket';
 
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -67,7 +67,11 @@ export default function Home() {
   const handleStartGame = async () => {
     try {
       console.log('Iniciando partida...');
-      const partida = await iniciarPartida(1, 2); // Asume IDs de jugadores 1 y 2
+      // Primero, crear o obtener usuarios
+      const jugador1 = await crearOObtenerUsuario('Jugador 1');
+      const jugador2 = await crearOObtenerUsuario('Jugador 2');
+      
+      const partida = await iniciarPartida(jugador1.id, jugador2.id);
       console.log('Partida iniciada:', partida);
       if (!partida || !partida.id) {
         throw new Error('La respuesta del servidor no contiene los datos esperados');
