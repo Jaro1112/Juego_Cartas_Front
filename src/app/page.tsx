@@ -1,7 +1,7 @@
 'use client';
 
 import styles from './page.module.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import GameBoard from '../components/GameBoard';
 import MainMenu from '../components/MainMenu';
 import Rules from '../components/Rules';
@@ -60,6 +60,7 @@ export default function Home() {
   const [buscandoOponente, setBuscandoOponente] = useState(false);
   const [tiempoEspera, setTiempoEspera] = useState(0);
   const [searchCancelled, setSearchCancelled] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleLogin = (usuarioLogueado: Usuario) => {
     setUsuario(usuarioLogueado);
@@ -99,7 +100,7 @@ export default function Home() {
       }, 1000);
 
       // Esperar 30 segundos antes de iniciar la búsqueda real
-      setTimeout(async () => {
+      searchTimeoutRef.current = setTimeout(async () => {
         if (!searchCancelled) {
           clearInterval(intervalId);
           console.log('Iniciando partida con usuario ID:', nuevoUsuario.id);
@@ -249,6 +250,10 @@ export default function Home() {
     setBuscandoOponente(false);
     setTiempoEspera(0);
     setShowMenu(true);
+    // Limpiar cualquier temporizador pendiente
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
   };
 
   const handleSurrender = async () => {
