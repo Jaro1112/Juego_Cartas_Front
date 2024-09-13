@@ -45,3 +45,18 @@ export interface Usuario {
   username: string;
   email: string;
 }
+
+export interface PartidaWebSocket {
+  id: number;
+  jugador1: {
+    id: number;
+    username: string;
+  };
+  jugador2: {
+    id: number;
+    username: string;
+  };
+  cartasJugador1: Card[];
+  cartasJugador2: Card[];
+  turnoActual: string;
+}

@@ -1,5 +1,6 @@
 'use client';
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { API_BASE_URL } from '../config';
 import styles from './page.module.css';
 import React, { useState, useEffect, useRef } from 'react';
 import GameBoard from '../components/GameBoard';
@@ -9,7 +10,7 @@ import LoginRegister from '../components/LoginRegister';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { EfectoTipo, Card, Player, GameState, Usuario, PartidaBackend } from '../Types';
 import { iniciarPartida, jugarCarta, robarCarta, crearOObtenerUsuario, rendirse } from '../api/gameApi';
-import { connectWebSocket, disconnectWebSocket } from '../api/websocket';
+import { connectWebSocket, disconnectWebSocket, subscribeToEmparejamiento, buscarOponente } from '../api/websocket';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const efectos: Record<EfectoTipo, (state: GameState, currentPlayer: 'player1' | 'player2', otherPlayer: 'player1' | 'player2') => GameState> = {
@@ -87,28 +88,20 @@ export default function Home() {
         throw new Error('No se pudo obtener un ID de usuario válido');
       }
 
-      intervalIdRef.current = setInterval(() => {
-        setTiempoEspera((prevTiempo) => {
-          if (prevTiempo <= 0 || searchCancelled) {
-            if (intervalIdRef.current) {
-              clearInterval(intervalIdRef.current);
-            }
-            if (!searchCancelled && prevTiempo <= 0) {
-              iniciarPartidaConBot(nuevoUsuario.id);
-            }
-            return 0;
+      connectWebSocket(() => {
+        subscribeToEmparejamiento((partida) => {
+          if (partida) {
+            handlePartidaIniciada(partida);
           }
-          return prevTiempo - 1;
         });
-      }, 1000);
+        buscarOponente(nuevoUsuario.id);
+      });
 
-      // Esperar 30 segundos antes de iniciar la búsqueda real
+      // Esperar 30 segundos antes de iniciar la partida con un bot
       searchTimeoutRef.current = setTimeout(async () => {
         if (!searchCancelled) {
-          if (intervalIdRef.current) {
-            clearInterval(intervalIdRef.current);
-          }
-          console.log('Iniciando partida con usuario ID:', nuevoUsuario.id);
+          disconnectWebSocket();
+          console.log('Iniciando partida con bot para usuario ID:', nuevoUsuario.id);
           const partida = await iniciarPartida(nuevoUsuario.id);
           handlePartidaIniciada(partida);
         }
@@ -119,12 +112,6 @@ export default function Home() {
       setBuscandoOponente(false);
       setTiempoEspera(0);
     }
-  };
-
-  const iniciarPartidaConBot = async (userId: number) => {
-    console.log('Iniciando partida con bot para usuario ID:', userId);
-    const partida = await iniciarPartida(userId);
-    handlePartidaIniciada(partida);
   };
 
   const handlePartidaIniciada = (partida: PartidaBackend) => {
@@ -296,7 +283,9 @@ export default function Home() {
   };
 
   useEffect(() => {
-    connectWebSocket();
+    connectWebSocket(() => {
+      console.log('WebSocket conectado');
+    });
     return () => {
       disconnectWebSocket();
     };
