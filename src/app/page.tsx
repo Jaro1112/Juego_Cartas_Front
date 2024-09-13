@@ -139,13 +139,13 @@ export default function Home() {
       id: partida.id,
       player1: { 
         name: partida.jugador1.username, 
-        life: partida.jugador1.vida, 
+        life: 20, // Establecer la vida a 20 al inicio de cada partida
         hand: partida.cartasJugador1 || [], 
         deck: [] 
       },
       player2: { 
         name: partida.jugador2.username, 
-        life: partida.jugador2.vida, 
+        life: 20, // Establecer la vida a 20 al inicio de cada partida
         hand: partida.cartasJugador2 || [], 
         deck: [] 
       },
@@ -330,31 +330,29 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className={styles.contentWrapper}>
-        {gameState ? (
-          <GameBoard 
-            player1={gameState.player1}
-            player2={gameState.player2}
-            currentTurn={gameState.currentTurn}
-            onPlayCard={handlePlayCard}
-            onDrawCard={handleDrawCard}
-            log={gameState.log}
-            ganador={gameState.ganador}
-            playedCards={gameState.playedCards}
-            onSurrender={handleSurrender}
-            onBackToMenu={handleBackToMenu}
-          />
-        ) : (
-          <>
-            <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />
-            <div className={styles.playerInfo}>
-              <span className={styles.playerLabel}>Jugador:</span>
-              <span className={styles.playerName}>{usuario.username}</span>
-            </div>
-          </>
-        )}
-      </div>
+    <main className="min-h-screen w-full">
+      {gameState ? (
+        <GameBoard 
+          player1={gameState.player1}
+          player2={gameState.player2}
+          currentTurn={gameState.currentTurn}
+          onPlayCard={handlePlayCard}
+          onDrawCard={handleDrawCard}
+          log={gameState.log}
+          ganador={gameState.ganador}
+          playedCards={gameState.playedCards}
+          onSurrender={handleSurrender}
+          onBackToMenu={handleBackToMenu}
+        />
+      ) : (
+        <div className={styles.container}>
+          <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />
+          <div className={styles.playerInfo}>
+            <span className={styles.playerLabel}>Jugador:</span>
+            <span className={styles.playerName}>{usuario.username}</span>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
