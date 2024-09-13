@@ -53,13 +53,13 @@ function convertirPartidaAGameState(partida: PartidaBackend): GameState {
     id: partida.id,
     player1: {
       name: partida.jugador1.username,
-      life: partida.jugador1.vida,
+      life: 20, // Establecer la vida a 20 al inicio de cada partida
       hand: partida.cartasJugador1,
       deck: []
     },
     player2: {
       name: partida.jugador2.username,
-      life: partida.jugador2.vida,
+      life: 20, // Establecer la vida a 20 al inicio de cada partida
       hand: partida.cartasJugador2,
       deck: []
     },

@@ -130,11 +130,11 @@ export default function Home() {
   const handlePartidaIniciada = (partida: PartidaBackend) => {
     setBuscandoOponente(false);
     setTiempoEspera(0);
-
+  
     if (!partida || !partida.id) {
       throw new Error('La respuesta del servidor no contiene los datos esperados');
     }
-
+  
     const newGameState: GameState = {
       id: partida.id,
       player1: { 
@@ -154,7 +154,7 @@ export default function Home() {
       ganador: null,
       playedCards: { player1: null, player2: null }
     };
-
+  
     setGameState(newGameState);
     setShowMenu(false);
   };
