@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { registrarUsuario, login } from '../api/usuarioApi';
+import styles from '../styles/LoginRegister.module.css';
 
 interface Usuario {
   id: number;
@@ -33,44 +34,51 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ onLogin }) => {
       if (error instanceof Error) {
         setError(error.message);
       } else {
-        setError('An unknown error occurred');
+        setError('Ha ocurrido un error desconocido');
       }
     }
   };
 
   return (
-    <div>
-      <h2>{isLogin ? 'Iniciar sesión' : 'Registrarse'}</h2>
-      <form onSubmit={handleSubmit}>
-        {!isLogin && (
+    <div className={styles.container}>
+      <div className={styles.formContainer}>
+        <h2 className={styles.title}>{isLogin ? 'Iniciar sesión' : 'Registrarse'}</h2>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          {!isLogin && (
+            <input
+              type="text"
+              placeholder="Nombre de usuario"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className={styles.input}
+            />
+          )}
           <input
-            type="text"
-            placeholder="Nombre de usuario"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
+            className={styles.input}
           />
-        )}
-        <input
-          type="email"
-          placeholder="Correo electrónico"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">{isLogin ? 'Iniciar sesión' : 'Registrarse'}</button>
-      </form>
-      {error && <p>{error}</p>}
-      <button onClick={() => setIsLogin(!isLogin)}>
-        {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
-      </button>
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className={styles.input}
+          />
+          <button type="submit" className={styles.button}>
+            {isLogin ? 'Iniciar sesión' : 'Registrarse'}
+          </button>
+        </form>
+        {error && <p className={styles.error}>{error}</p>}
+        <button onClick={() => setIsLogin(!isLogin)} className={styles.switchButton}>
+          {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
+        </button>
+      </div>
     </div>
   );
 };
