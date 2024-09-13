@@ -60,7 +60,7 @@ export default function Home() {
   const [showRules, setShowRules] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [buscandoOponente, setBuscandoOponente] = useState(false);
-  const [tiempoEspera, setTiempoEspera] = useState(0);
+  const [tiempoEspera, setTiempoEspera] = useState(30);
   const [searchCancelled, setSearchCancelled] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
@@ -95,7 +95,9 @@ export default function Home() {
             handlePartidaIniciada(partida);
           }
         });
-        buscarOponente(nuevoUsuario.id);
+        buscarOponente(nuevoUsuario.id, (remainingTime) => {
+          setTiempoEspera(remainingTime);
+        });
       });
 
       // Esperar 30 segundos antes de iniciar la partida con un bot

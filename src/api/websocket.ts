@@ -40,12 +40,23 @@ export function subscribeToEmparejamiento(callback: (partida: PartidaWebSocket) 
   }
 }
 
-export function buscarOponente(jugadorId: number) {
+export function buscarOponente(jugadorId: number, onTimeUpdate: (remainingTime: number) => void) {
   if (client) {
     client.publish({
       destination: '/app/buscarOponente',
       body: JSON.stringify(jugadorId),
     });
+
+    let remainingTime = 30;
+    const intervalId = setInterval(() => {
+      remainingTime--;
+      onTimeUpdate(remainingTime);
+      if (remainingTime <= 0) {
+        clearInterval(intervalId);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
   }
 }
 
