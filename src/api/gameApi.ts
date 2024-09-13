@@ -72,7 +72,7 @@ function convertirPartidaAGameState(partida: PartidaBackend): GameState {
 
 export const crearOObtenerUsuario = async (username: string) => {
   try {
-    const response = await fetch(`/api/usuarios`, {
+    const response = await fetch(`${API_BASE_URL}/api/juego/usuarios`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

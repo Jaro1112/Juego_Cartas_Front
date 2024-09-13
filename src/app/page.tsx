@@ -9,7 +9,7 @@ import LoginRegister from '../components/LoginRegister';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { EfectoTipo, Card, Player, GameState, Usuario } from '../Types';
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { iniciarPartida, jugarCarta, robarCarta } from '../api/gameApi';
+import { iniciarPartida, jugarCarta, robarCarta, crearOObtenerUsuario } from '../api/gameApi';
 import { connectWebSocket, disconnectWebSocket } from '../api/websocket';
 
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -66,15 +66,34 @@ export default function Home() {
 
   const handleStartGame = async () => {
     try {
-      if (!usuario || !usuario.id) {
-        throw new Error('No hay usuario logueado o el ID del usuario es inválido');
+      if (!usuario) {
+        throw new Error('No hay usuario logueado');
       }
-      console.log('Iniciando partida con usuario ID:', usuario.id);
-      const partida = await iniciarPartida(usuario.id);
+
+      let partida;
+      if (!usuario.id) {
+        console.log('Creando o obteniendo usuario...');
+        const nuevoUsuario = await crearOObtenerUsuario(usuario.username);
+        setUsuario(nuevoUsuario);
+        console.log('Usuario creado/obtenido:', nuevoUsuario);
+        
+        if (!nuevoUsuario.id) {
+          throw new Error('No se pudo obtener un ID de usuario válido');
+        }
+        
+        console.log('Iniciando partida con usuario ID:', nuevoUsuario.id);
+        partida = await iniciarPartida(nuevoUsuario.id);
+      } else {
+        console.log('Iniciando partida con usuario ID:', usuario.id);
+        partida = await iniciarPartida(usuario.id);
+      }
+
       console.log('Partida iniciada:', partida);
+
       if (!partida || !partida.id) {
         throw new Error('La respuesta del servidor no contiene los datos esperados');
       }
+
       const newGameState = {
         id: partida.id,
         player1: { 
