@@ -17,12 +17,12 @@ export interface Player {
 
 export interface GameState {
   id: number; 
-  player1: Player;
-  player2: Player;
+  currentPlayer: Player;
+  opponent: Player;
   currentTurn: number;
   log: string[];
-  ganador: 'player1' | 'player2' | null;
-  playedCards: { player1: Card | null, player2: Card | null };
+  ganador: number | null;
+  playedCards: { currentPlayer: Card | null, opponent: Card | null };
 }
 
 interface Jugador {

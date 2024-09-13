@@ -6,59 +6,52 @@ import CardComponent from './Card';
 import styles from './GameBoard.module.css';
 
 interface GameBoardProps {
-  player1: Player;
-  player2: Player;
+  currentPlayer: Player;
+  opponent: Player;
   currentTurn: number;
   onPlayCard: (playerId: number, cardId: number) => void;
   onDrawCard: (playerId: number) => void;
   log: string[];
-  ganador: "player1" | "player2" | null;
+  ganador: number | null;
   playedCards: {
-    player1: Card | null;
-    player2: Card | null;
+    currentPlayer: Card | null;
+    opponent: Card | null;
   };
   onSurrender: () => void;
   onBackToMenu: () => void;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({ 
-  player1, player2, currentTurn, onPlayCard, onDrawCard, log, ganador, playedCards, onSurrender, onBackToMenu 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+  currentPlayer, opponent, currentTurn, onPlayCard, onDrawCard, log, ganador, playedCards, onSurrender, onBackToMenu 
 }) => {
   const [showResult, setShowResult] = useState(false);
 
   useEffect(() => {
     if (ganador) {
       setShowResult(true);
-      setTimeout(() => {
-        setShowResult(false);
-        onBackToMenu();
-      }, 3000);
     }
-  }, [ganador, onBackToMenu]);
+  }, [ganador]);
 
   return (
     <div className={styles.gameBoard}>
-      <PlayerInfo name={player2.name} life={player2.life} isCurrentTurn={currentTurn === 2} />
-      <Hand cards={player2.hand} onPlayCard={(cardId) => onPlayCard(2, cardId)} isCurrentTurn={currentTurn === 2} />
+      <button onClick={onBackToMenu} className={styles.backButton}>Volver al Menú</button>
+      <button onClick={onSurrender} className={styles.surrenderButton}>Rendirse</button>
+      
+      <PlayerInfo name={opponent.name} life={opponent.life} isCurrentTurn={currentTurn !== currentPlayer.id} />
+      <Hand cards={opponent.hand} onPlayCard={() => {}} isCurrentTurn={false} isOpponent={true} />
       
       <div className={styles.playArea}>
-        {playedCards.player2 && <CardComponent {...playedCards.player2} onSelect={() => {}} isSelected={false} />}
-        {playedCards.player1 && <CardComponent {...playedCards.player1} onSelect={() => {}} isSelected={false} />}
+        <div className={styles.playedCard}>
+        {playedCards.opponent && <CardComponent {...playedCards.opponent} onSelect={() => {}} isSelected={false} isPlayed={true} />}
+        </div>
+        <div className={styles.playedCard}>
+        {playedCards.currentPlayer && <CardComponent {...playedCards.currentPlayer} onSelect={() => {}} isSelected={false} isPlayed={true} />}
+        </div>
       </div>
       
-      <div className={styles.centerArea}>
-        <button 
-          onClick={() => onDrawCard(currentTurn)} 
-          disabled={ganador !== null}
-          className={styles.playButton}
-        >
-          Robar Carta
-        </button>
-        <button onClick={onSurrender} className={styles.surrenderButton}>Rendirse</button>
-      </div>
-      
-      <Hand cards={player1.hand} onPlayCard={(cardId) => onPlayCard(1, cardId)} isCurrentTurn={currentTurn === 1} />
-      <PlayerInfo name={player1.name} life={player1.life} isCurrentTurn={currentTurn === 1} />
+      <Hand cards={currentPlayer.hand} onPlayCard={(cardId) => onPlayCard(currentPlayer.id, cardId)} isCurrentTurn={currentTurn === currentPlayer.id} />
+      <PlayerInfo name={currentPlayer.name} life={currentPlayer.life} isCurrentTurn={currentTurn === currentPlayer.id} />
       
       <div className={styles.logArea}>
         {log.map((entry, index) => (
@@ -67,14 +60,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
       </div>
       
       {showResult && (
-        <div className={`${styles.resultOverlay} ${ganador === 'player1' ? styles.winOverlay : styles.loseOverlay}`}>
+        <div className={`${styles.resultOverlay} ${ganador === currentPlayer.id ? styles.winOverlay : styles.loseOverlay}`}>
           <h1 className={styles.resultText}>
-            {ganador === 'player1' ? '¡Ganaste!' : '¡Perdiste!'}
+            {ganador === currentPlayer.id ? '¡Ganaste!' : '¡Perdiste!'}
           </h1>
         </div>
       )}
     </div>
   );
-};
+}
 
 export default GameBoard;

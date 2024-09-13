@@ -13,40 +13,41 @@ import { iniciarPartida, jugarCarta, robarCarta, crearOObtenerUsuario, rendirse 
 import { connectWebSocket, disconnectWebSocket, subscribeToEmparejamiento, buscarOponente, subscribeToPartida } from '../api/websocket';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const efectos: Record<EfectoTipo, (state: GameState, currentPlayer: 'player1' | 'player2', otherPlayer: 'player1' | 'player2') => GameState> = {
-  QUEMAR: (state, _currentPlayer, otherPlayer) => {
+const efectos: Record<EfectoTipo, (state: GameState, isCurrentPlayer: boolean) => GameState> = {
+  QUEMAR: (state, isCurrentPlayer) => {
+    const targetPlayer = isCurrentPlayer ? 'opponent' : 'currentPlayer';
     return {
       ...state,
-      [otherPlayer]: {
-        ...state[otherPlayer],
-        life: state[otherPlayer].life - 2
+      [targetPlayer]: {
+        ...state[targetPlayer],
+        life: state[targetPlayer].life - 2
       },
-      log: [...state.log, `${state[otherPlayer].name} recibió 2 de daño adicional por quemadura.`]
+      log: [...state.log, `${state[targetPlayer].name} recibió 2 de daño adicional por quemadura.`]
     };
   },
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  CURAR: (state, currentPlayer, _otherPlayer) => {
+  CURAR: (state, isCurrentPlayer) => {
+    const targetPlayer = isCurrentPlayer ? 'currentPlayer' : 'opponent';
     return {
       ...state,
-      [currentPlayer]: {
-        ...state[currentPlayer],
-        life: Math.min(state[currentPlayer].life + 3, 20)
+      [targetPlayer]: {
+        ...state[targetPlayer],
+        life: Math.min(state[targetPlayer].life + 3, 20)
       },
-      log: [...state.log, `${state[currentPlayer].name} se curó 3 puntos de vida.`]
+      log: [...state.log, `${state[targetPlayer].name} se curó 3 puntos de vida.`]
     };
   },
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  ROBAR_CARTA: (state, currentPlayer, _otherPlayer) => {
-    if (state[currentPlayer].deck.length > 0) {
-      const [newCard, ...restDeck] = state[currentPlayer].deck;
+  ROBAR_CARTA: (state, isCurrentPlayer) => {
+    const targetPlayer = isCurrentPlayer ? 'currentPlayer' : 'opponent';
+    if (state[targetPlayer].deck.length > 0) {
+      const [newCard, ...restDeck] = state[targetPlayer].deck;
       return {
         ...state,
-        [currentPlayer]: {
-          ...state[currentPlayer],
-          hand: [...state[currentPlayer].hand, newCard],
+        [targetPlayer]: {
+          ...state[targetPlayer],
+          hand: [...state[targetPlayer].hand, newCard],
           deck: restDeck
         },
-        log: [...state.log, `${state[currentPlayer].name} robó una carta adicional.`]
+        log: [...state.log, `${state[targetPlayer].name} robó una carta adicional.`]
       };
     }
     return state;
@@ -122,30 +123,37 @@ export default function Home() {
       throw new Error('La respuesta del servidor no contiene los datos esperados');
     }
   
+    const isPlayer1 = partida.jugador1.id === usuario?.id;
+  
     const newGameState: GameState = {
       id: partida.id,
-      player1: { 
-        id: partida.jugador1.id,
-        name: partida.jugador1.username, 
-        life: 'vida' in partida.jugador1 ? partida.jugador1.vida ?? 20 : 20,
-        hand: 'cartasJugador1' in partida ? partida.cartasJugador1 : [], 
-        deck: [] 
+      currentPlayer: {
+        id: isPlayer1 ? partida.jugador1.id : partida.jugador2.id,
+        name: isPlayer1 ? partida.jugador1.username : partida.jugador2.username,
+        life: isPlayer1 ? (partida.jugador1.vida ?? 20) : (partida.jugador2.vida ?? 20),
+        hand: [],
+        deck: []
       },
-      player2: { 
-        id: partida.jugador2.id,
-        name: partida.jugador2.username, 
-        life: 'vida' in partida.jugador2 ? partida.jugador2.vida ?? 20 : 20,
-        hand: 'cartasJugador2' in partida ? partida.cartasJugador2 : [], 
-        deck: [] 
+      opponent: {
+        id: isPlayer1 ? partida.jugador2.id : partida.jugador1.id,
+        name: isPlayer1 ? partida.jugador2.username : partida.jugador1.username,
+        life: isPlayer1 ? (partida.jugador2.vida ?? 20) : (partida.jugador1.vida ?? 20),
+        hand: [],
+        deck: []
       },
       currentTurn: partida.turnoActual,
       log: [],
       ganador: null,
-      playedCards: { player1: null, player2: null }
+      playedCards: { currentPlayer: null, opponent: null }
     };
   
+    if ('cartasJugador1' in partida) {
+      newGameState.currentPlayer.hand = isPlayer1 ? partida.cartasJugador1 : partida.cartasJugador2;
+      newGameState.opponent.hand = isPlayer1 ? partida.cartasJugador2 : partida.cartasJugador1;
+    }
+  
     setGameState(newGameState);
-    setShowMenu(false);   
+    setShowMenu(false);
   };
 
   const handleShowRules = () => {
@@ -184,7 +192,8 @@ export default function Home() {
       console.error('Error al robar la carta:', error);
     }
   };
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const calcularDaño = (cartaAtacante: Card, cartaDefensora: Card | null): number => {
     let daño = cartaAtacante.poder;
     
@@ -212,12 +221,13 @@ export default function Home() {
     return Math.max(daño, 0);
   };
 
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const verificarEstadoJuego = (state: GameState): GameState => {
-    if (state.player1.life <= 0) {
-      return { ...state, ganador: 'player2' };
-    } else if (state.player2.life <= 0) {
-      return { ...state, ganador: 'player1' };
+    if (state.currentPlayer.life <= 0) {
+      return { ...state, ganador: state.opponent.id };
+    } else if (state.opponent.life <= 0) {
+      return { ...state, ganador: state.currentPlayer.id };
     }
     return state;
   };
@@ -283,23 +293,22 @@ export default function Home() {
           const surrenderingPlayerId = data.jugadorRendidoId;
           setGameState(prevState => {
             if (!prevState) return null;
-            const surrenderingPlayer = prevState.player1.id === surrenderingPlayerId ? 'player1' : 'player2';
-            const winningPlayer = surrenderingPlayer === 'player1' ? 'player2' : 'player1';
+            const winningPlayer = prevState.currentPlayer.id === surrenderingPlayerId ? 'opponent' : 'currentPlayer';
             return {
               ...prevState,
-              player1: {
-                ...prevState.player1,
-                life: surrenderingPlayer === 'player1' ? 0 : prevState.player1.life
+              currentPlayer: {
+                ...prevState.currentPlayer,
+                life: prevState.currentPlayer.id === surrenderingPlayerId ? 0 : prevState.currentPlayer.life
               },
-              player2: {
-                ...prevState.player2,
-                life: surrenderingPlayer === 'player2' ? 0 : prevState.player2.life
+              opponent: {
+                ...prevState.opponent,
+                life: prevState.opponent.id === surrenderingPlayerId ? 0 : prevState.opponent.life
               },
-              ganador: winningPlayer
+              ganador: prevState[winningPlayer].id
             };
           });
         }
-      });;
+      });
     }
   }, [gameState]);
 
@@ -335,8 +344,8 @@ export default function Home() {
     <main className="min-h-screen w-full">
       {gameState ? (
         <GameBoard 
-        player1={gameState.player1}
-        player2={gameState.player2}
+        currentPlayer={gameState.currentPlayer}
+        opponent={gameState.opponent}
         currentTurn={gameState.currentTurn}
         onPlayCard={handlePlayCard}
         onDrawCard={handleDrawCard}
@@ -357,4 +366,4 @@ export default function Home() {
       )}
     </main>
   );
-}
+} 

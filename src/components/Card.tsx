@@ -8,12 +8,13 @@ interface CardProps extends Card {
   onSelect: () => void;
   isSelected: boolean;
   isPlayed?: boolean;
+  isOpponent?: boolean;
 }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const CardComponent: React.FC<CardProps> = ({ id, elemento, poder, efecto, onSelect, isSelected, isPlayed }) => {
+const CardComponent: React.FC<CardProps> = ({ id, elemento, poder, efecto, onSelect, isSelected, isPlayed, isOpponent }) => {
   return (
     <div 
-      className={`${styles.card} ${isSelected ? styles.selected : ''} ${isPlayed ? styles.played : ''}`}
+      className={`${styles.card} ${isSelected ? styles.selected : ''} ${isPlayed ? styles.played : ''} ${isOpponent ? styles.opponent : ''}`}
       onClick={onSelect}
     >
       <div className={styles.elementIcon}>

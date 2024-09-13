@@ -7,17 +7,19 @@ interface HandProps {
   cards: Card[];
   onPlayCard: (cardId: number) => void;
   isCurrentTurn: boolean;
+  isOpponent?: boolean;
 }
 
-const Hand: React.FC<HandProps> = ({ cards, onPlayCard, isCurrentTurn }) => {
+const Hand: React.FC<HandProps> = ({ cards, onPlayCard, isCurrentTurn, isOpponent = false }) => {
   return (
-    <div className={`flex justify-center flex-wrap gap-2 p-2 ${isCurrentTurn ? 'opacity-100' : 'opacity-60 pointer-events-none'}`}>
+    <div className={`flex justify-center flex-wrap gap-2 p-2 ${isCurrentTurn && !isOpponent ? 'opacity-100' : 'opacity-60 pointer-events-none'}`}>
       {cards.map((card) => (
         <CardComponent 
           key={card.id}
           {...card}
-          onSelect={() => onPlayCard(card.id)}
+          onSelect={() => !isOpponent && onPlayCard(card.id)}
           isSelected={false}
+          isOpponent={isOpponent}
         />
       ))}
     </div>

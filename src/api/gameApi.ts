@@ -49,26 +49,28 @@ export const robarCarta = async (partidaId: number, jugadorId: number): Promise<
 };
 
 function convertirPartidaAGameState(partida: PartidaBackend): GameState {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const isPlayer1 = true; // Asumimos que el jugador actual es siempre el jugador 1
   return {
     id: partida.id,
-    player1: {
+    currentPlayer: {
       id: partida.jugador1.id,
       name: partida.jugador1.username,
-      life: partida.jugador1.vida ?? 20, // Use nullish coalescing operator
+      life: partida.jugador1.vida ?? 20,
       hand: partida.cartasJugador1,
       deck: []
     },
-    player2: {
+    opponent: {
       id: partida.jugador2.id,
       name: partida.jugador2.username,
-      life: partida.jugador2.vida ?? 20, // Use nullish coalescing operator
+      life: partida.jugador2.vida ?? 20,
       hand: partida.cartasJugador2,
       deck: []
     },
     currentTurn: partida.turnoActual,
     log: [],
-    ganador: partida.estado === 'TERMINADO' ? (partida.jugador1.vida ?? 0 > 0 ? 'player1' : 'player2') : null,
-    playedCards: { player1: null, player2: null }
+    ganador: partida.estado === 'TERMINADO' ? (partida.jugador1.vida ?? 0 > 0 ? partida.jugador1.id : partida.jugador2.id) : null,
+    playedCards: { currentPlayer: null, opponent: null }
   };
 }
 
