@@ -58,6 +58,8 @@ export default function Home() {
   const [showMenu, setShowMenu] = useState(true);
   const [showRules, setShowRules] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [buscandoOponente, setBuscandoOponente] = useState(false);
+  const [tiempoEspera, setTiempoEspera] = useState(0);
 
   const handleLogin = (usuarioLogueado: Usuario) => {
     setUsuario(usuarioLogueado);
@@ -70,6 +72,19 @@ export default function Home() {
         throw new Error('No hay usuario logueado o falta el nombre de usuario');
       }
 
+      setBuscandoOponente(true);
+      setTiempoEspera(0);
+
+      const intervalId = setInterval(() => {
+        setTiempoEspera((prevTiempo) => {
+          if (prevTiempo >= 30) {
+            clearInterval(intervalId);
+            return 30;
+          }
+          return prevTiempo + 1;
+        });
+      }, 1000);
+
       console.log('Creando o obteniendo usuario...');
       const nuevoUsuario = await crearOObtenerUsuario(usuario.username);
       setUsuario(nuevoUsuario);
@@ -81,6 +96,9 @@ export default function Home() {
 
       console.log('Iniciando partida con usuario ID:', nuevoUsuario.id);
       const partida = await iniciarPartida(nuevoUsuario.id);
+
+      clearInterval(intervalId);
+      setBuscandoOponente(false);
 
       console.log('Partida iniciada:', partida);
 
@@ -112,6 +130,8 @@ export default function Home() {
       setShowMenu(false);
     } catch (error) {
       console.error('Error al iniciar la partida:', error);
+      setBuscandoOponente(false);
+      setTiempoEspera(0);
       // Aquí puedes manejar el error, por ejemplo, mostrando un mensaje al usuario
     }
   };
@@ -209,6 +229,11 @@ export default function Home() {
     return deck.sort(() => Math.random() - 0.5); // Mezclar el mazo
   };
 
+  const handleCancelSearch = () => {
+    setBuscandoOponente(false);
+    setTiempoEspera(0);
+  };
+
   useEffect(() => {
     connectWebSocket();
     return () => {
@@ -227,7 +252,22 @@ export default function Home() {
           <span className={styles.playerLabel}>Jugador:</span>
           <span className={styles.playerName}>{usuario.username}</span>
         </div>
-        <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />
+        {showMenu && (
+          <div className="menu">
+            {!buscandoOponente ? (
+              <>
+                <button onClick={handleStartGame}>Iniciar Juego</button>
+                <button onClick={handleShowRules}>Ver Reglas</button>
+              </>
+            ) : (
+              <div className="buscando-oponente">
+                <p>Encontrando Oponente</p>
+                <p>Tiempo de espera: {tiempoEspera} segundos</p>
+                <button onClick={handleCancelSearch}>Cancelar</button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   }
