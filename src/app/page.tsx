@@ -60,6 +60,7 @@ export default function Home() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [buscandoOponente, setBuscandoOponente] = useState(false);
   const [tiempoEspera, setTiempoEspera] = useState(0);
+  const [searchCancelled, setSearchCancelled] = useState(false);
 
   const handleLogin = (usuarioLogueado: Usuario) => {
     setUsuario(usuarioLogueado);
@@ -74,12 +75,13 @@ export default function Home() {
 
       setBuscandoOponente(true);
       setTiempoEspera(0);
+      setSearchCancelled(false);
 
       const intervalId = setInterval(() => {
         setTiempoEspera((prevTiempo) => {
-          if (prevTiempo >= 30) {
+          if (prevTiempo >= 30 || searchCancelled) {
             clearInterval(intervalId);
-            return 30;
+            return prevTiempo;
           }
           return prevTiempo + 1;
         });
@@ -99,6 +101,10 @@ export default function Home() {
 
       clearInterval(intervalId);
       setBuscandoOponente(false);
+
+      if (searchCancelled) {
+        return; // Si la búsqueda fue cancelada, no inicies la partida
+      }
 
       console.log('Partida iniciada:', partida);
 
@@ -230,8 +236,10 @@ export default function Home() {
   };
 
   const handleCancelSearch = () => {
+    setSearchCancelled(true);
     setBuscandoOponente(false);
     setTiempoEspera(0);
+    setShowMenu(true);
   };
 
   const handleSurrender = async () => {
