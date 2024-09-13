@@ -16,4 +16,5 @@ const MainMenu: React.FC<MainMenuProps> = ({ onStartGame, onShowRules }) => {
   );
 };
 
+
 export default MainMenu;

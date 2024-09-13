@@ -288,20 +288,13 @@ export default function Home() {
           <span className={styles.playerLabel}>Jugador:</span>
           <span className={styles.playerName}>{usuario.username}</span>
         </div>
-        {showMenu && (
-          <div className="menu">
-            {!buscandoOponente ? (
-              <>
-                <button onClick={handleStartGame}>Iniciar Juego</button>
-                <button onClick={handleShowRules}>Ver Reglas</button>
-              </>
-            ) : (
-              <div className="buscando-oponente">
-                <p>Encontrando Oponente</p>
-                <p>Tiempo de espera: {tiempoEspera} segundos</p>
-                <button onClick={handleCancelSearch}>Cancelar</button>
-              </div>
-            )}
+        {!buscandoOponente ? (
+          <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />
+        ) : (
+          <div className={styles.buscandoOponente}>
+            <p>Encontrando Oponente</p>
+            <p>Tiempo de espera: {tiempoEspera} segundos</p>
+            <button onClick={handleCancelSearch}>Cancelar</button>
           </div>
         )}
       </div>
