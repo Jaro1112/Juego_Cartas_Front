@@ -49,11 +49,13 @@ export function buscarOponente(jugadorId: number) {
   }
 }
 
-export function subscribeToPartida(partidaId: number, callback: (data: PartidaEvent) => void) {
+export function subscribeToPartida(partidaId: number, callback: (data: PartidaEvent) => void): () => void {
   if (client) {
-    client.subscribe(`/topic/partida/${partidaId}`, (message) => {
+    const subscription = client.subscribe(`/topic/partida/${partidaId}`, (message) => {
       const data = JSON.parse(message.body) as PartidaEvent;
       callback(data);
     });
+    return () => subscription.unsubscribe();
   }
+  return () => {};
 }

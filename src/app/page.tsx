@@ -269,7 +269,12 @@ export default function Home() {
     if (gameState && usuario) {
       try {
         await rendirse(gameState.id, usuario.id);
-        // La actualización del estado se manejará en el callback de subscribeToPartida
+        setGameState(null);
+        setShowMenu(true);
+        disconnectWebSocket();
+        connectWebSocket(() => {
+          console.log('WebSocket reconectado después de rendirse');
+        });
       } catch (error) {
         console.error('Error al rendirse:', error);
         alert('Hubo un error al intentar rendirse. Por favor, intenta de nuevo.');
@@ -288,7 +293,7 @@ export default function Home() {
 
   useEffect(() => {
     if (gameState) {
-      subscribeToPartida(gameState.id, (data) => {
+      const unsubscribe = subscribeToPartida(gameState.id, (data) => {
         if (data.tipo === 'RENDICION') {
           const surrenderingPlayerId = data.jugadorRendidoId;
           setGameState(prevState => {
@@ -309,6 +314,10 @@ export default function Home() {
           });
         }
       });
+  
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
     }
   }, [gameState]);
 
