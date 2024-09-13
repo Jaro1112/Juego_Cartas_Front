@@ -15,9 +15,17 @@ export function connectWebSocket(onConnect: () => void, onError: () => void) {
     brokerURL: API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws',
     onConnect: () => {
       console.log('Connected to WebSocket');
-      setTimeout(() => {
-        onConnect();
-      }, 1000); // Espera 1 segundo antes de llamar a onConnect
+      if (client) {
+        client.subscribe('/topic/emparejamiento', () => {
+          console.log('Subscribed to /topic/emparejamiento');
+        });
+        setTimeout(() => {
+          onConnect();
+        }, 1000);
+      } else {
+        console.error('Client is null after connection');
+        onError();
+      }
     },
     onStompError: (frame) => {
       console.error('Broker reported error: ' + frame.headers['message']);
@@ -41,6 +49,8 @@ export function subscribeToEmparejamiento(callback: (partida: PartidaWebSocket) 
       const partida = JSON.parse(message.body) as PartidaWebSocket;
       callback(partida);
     });
+  } else {
+    console.error('Cannot subscribe: WebSocket client is not initialized');
   }
 }
 
