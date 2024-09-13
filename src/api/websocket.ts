@@ -15,7 +15,9 @@ export function connectWebSocket(onConnect: () => void, onError: () => void) {
     brokerURL: API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws',
     onConnect: () => {
       console.log('Connected to WebSocket');
-      onConnect();
+      setTimeout(() => {
+        onConnect();
+      }, 1000); // Espera 1 segundo antes de llamar a onConnect
     },
     onStompError: (frame) => {
       console.error('Broker reported error: ' + frame.headers['message']);

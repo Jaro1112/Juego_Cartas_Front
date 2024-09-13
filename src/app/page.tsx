@@ -94,15 +94,17 @@ export default function Home() {
         connectWebSocket(
           () => {
             console.log('WebSocket conectado en handleStartGame');
-            subscribeToEmparejamiento((partida) => {
-              if (partida) {
-                handlePartidaIniciada(partida);
-              }
-            });
-            buscarOponente(nuevoUsuario.id, (remainingTime) => {
-              setTiempoEspera(remainingTime);
-            });
-            resolve();
+            setTimeout(() => {
+              subscribeToEmparejamiento((partida) => {
+                if (partida) {
+                  handlePartidaIniciada(partida);
+                }
+              });
+              buscarOponente(nuevoUsuario.id, (remainingTime) => {
+                setTiempoEspera(remainingTime);
+              });
+              resolve();
+            }, 1000); // Espera 1 segundo adicional antes de suscribirse
           },
           () => {
             console.error('Error al conectar WebSocket en handleStartGame');
