@@ -333,17 +333,17 @@ export default function Home() {
     <main className="min-h-screen w-full">
       {gameState ? (
         <GameBoard 
-          player1={gameState.player1}
-          player2={gameState.player2}
-          currentTurn={gameState.currentTurn}
-          onPlayCard={handlePlayCard}
-          onDrawCard={handleDrawCard}
-          log={gameState.log}
-          ganador={gameState.ganador}
-          playedCards={gameState.playedCards}
-          onSurrender={handleSurrender}
-          onBackToMenu={handleBackToMenu}
-        />
+        player1={gameState.player1}
+        player2={gameState.player2}
+        currentTurn={gameState.currentTurn}
+        onPlayCard={handlePlayCard}
+        onDrawCard={handleDrawCard}
+        log={gameState.log}
+        ganador={gameState.ganador}
+        playedCards={gameState.playedCards}
+        onSurrender={handleSurrender}
+        onBackToMenu={handleBackToMenu}
+      />
       ) : (
         <div className={styles.container}>
           <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />
