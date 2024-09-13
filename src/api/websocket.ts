@@ -8,7 +8,7 @@ const client = new Client({
     passcode: '123',
   },
   debug: function (str) {
-    console.log(str);
+    console.log('STOMP: ' + str);
   },
   reconnectDelay: 5000,
   heartbeatIncoming: 4000,
@@ -19,20 +19,25 @@ client.onConnect = function (frame) {
   console.log('Connected: ' + frame);
   client.subscribe('/topic/partida', function (message) {
     console.log('Received: ' + message.body);
-    // Aquí puedes manejar los mensajes recibidos
   });
 };
 
 client.onStompError = function (frame) {
-  console.log('Broker reported error: ' + frame.headers['message']);
-  console.log('Additional details: ' + frame.body);
+  console.error('Broker reported error: ' + frame.headers['message']);
+  console.error('Additional details: ' + frame.body);
+};
+
+client.onWebSocketError = function (event) {
+  console.error('WebSocket Error:', event);
 };
 
 export function connectWebSocket() {
+  console.log('Attempting to connect to WebSocket...');
   client.activate();
 }
 
 export function disconnectWebSocket() {
+  console.log('Disconnecting WebSocket...');
   client.deactivate();
 }
 
