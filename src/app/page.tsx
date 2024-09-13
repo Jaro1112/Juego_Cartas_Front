@@ -4,10 +4,11 @@ import React, { useState, useEffect } from 'react';
 import GameBoard from '../components/GameBoard';
 import MainMenu from '../components/MainMenu';
 import Rules from '../components/Rules';
+import LoginRegister from '../components/LoginRegister';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EfectoTipo, Card, Player, GameState } from '../Types';
+import { EfectoTipo, Card, Player, GameState, Usuario } from '../Types';
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { iniciarPartida, jugarCarta, robarCarta, crearOObtenerUsuario } from '../api/gameApi';
+import { iniciarPartida, jugarCarta, robarCarta } from '../api/gameApi';
 import { connectWebSocket, disconnectWebSocket } from '../api/websocket';
 
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -52,26 +53,23 @@ const efectos: Record<EfectoTipo, (state: GameState, currentPlayer: 'player1' | 
 };
 
 export default function Home() {
-  const [gameState, setGameState] = useState<GameState>({
-    id: 0, // Añadimos un id inicial
-    player1: { name: 'Jugador 1', life: 20, hand: [], deck: [] },
-    player2: { name: 'Jugador 2', life: 20, hand: [], deck: [] },
-    currentTurn: 1,
-    log: [],
-    ganador: null,
-    playedCards: { player1: null, player2: null }
-  });
+  const [gameState, setGameState] = useState<GameState | null>(null);
   const [showMenu, setShowMenu] = useState(true);
   const [showRules, setShowRules] = useState(false);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+
+  const handleLogin = (usuarioLogueado: Usuario) => {
+    setUsuario(usuarioLogueado);
+    setShowMenu(true);
+  };
 
   const handleStartGame = async () => {
     try {
+      if (!usuario) {
+        throw new Error('No hay usuario logueado');
+      }
       console.log('Iniciando partida...');
-      // Primero, crear o obtener usuarios
-      const jugador1 = await crearOObtenerUsuario('Jugador 1');
-      const jugador2 = await crearOObtenerUsuario('Jugador 2');
-      
-      const partida = await iniciarPartida(jugador1.id, jugador2.id);
+      const partida = await iniciarPartida(usuario.id);
       console.log('Partida iniciada:', partida);
       if (!partida || !partida.id) {
         throw new Error('La respuesta del servidor no contiene los datos esperados');
@@ -101,7 +99,6 @@ export default function Home() {
       console.log('Menú oculto, juego iniciado');
     } catch (error) {
       console.error('Error al iniciar la partida:', error);
-      // Aquí podrías mostrar un mensaje de error al usuario
     }
   };
 
@@ -116,6 +113,10 @@ export default function Home() {
   };
 
   const handlePlayCard = async (playerId: number, cardId: number) => {
+    if (!gameState) {
+      console.error('No se puede jugar la carta: el juego no ha sido inicializado');
+      return;
+    }
     try {
       const updatedGameState = await jugarCarta(gameState.id, playerId, cardId);
       setGameState(updatedGameState);
@@ -125,6 +126,10 @@ export default function Home() {
   };
 
   const handleDrawCard = async (playerId: number) => {
+    if (!gameState) {
+      console.error('No se puede robar la carta: el juego no ha sido inicializado');
+      return;
+    }
     try {
       const updatedGameState = await robarCarta(gameState.id, playerId);
       setGameState(updatedGameState);
@@ -197,8 +202,17 @@ export default function Home() {
     };
   }, []);
 
+  if (!usuario) {
+    return <LoginRegister onLogin={handleLogin} />;
+  }
+
   if (showMenu) {
-    return <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />;
+    return (
+      <div>
+        <p>Usuario: {usuario.username}</p>
+        <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />
+      </div>
+    );
   }
 
   if (showRules) {
@@ -207,16 +221,21 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <GameBoard 
-        player1={gameState.player1}
-        player2={gameState.player2}
-        currentTurn={gameState.currentTurn}
-        onPlayCard={handlePlayCard}
-        onDrawCard={handleDrawCard}
-        log={gameState.log}
-        ganador={gameState.ganador}
-        playedCards={gameState.playedCards}
-      />
+      <p>Usuario: {usuario.username}</p>
+      {gameState ? (
+        <GameBoard 
+          player1={gameState.player1}
+          player2={gameState.player2}
+          currentTurn={gameState.currentTurn}
+          onPlayCard={handlePlayCard}
+          onDrawCard={handleDrawCard}
+          log={gameState.log}
+          ganador={gameState.ganador}
+          playedCards={gameState.playedCards}
+        />
+      ) : (
+        <p>Cargando juego...</p>
+      )}
     </main>
   );
 }

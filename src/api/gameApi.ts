@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '../config';
 import { GameState, PartidaBackend } from '../Types';
 
-export const iniciarPartida = async (jugador1Id: number, jugador2Id: number) => {
+export const iniciarPartida = async (jugadorId: number) => {
   try {
     console.log('Iniciando partida con URL:', `/api/juego/iniciar`);
     const response = await fetch(`/api/juego/iniciar`, {
@@ -9,7 +9,7 @@ export const iniciarPartida = async (jugador1Id: number, jugador2Id: number) => 
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ jugador1Id, jugador2Id }),
+      body: JSON.stringify({ jugadorId }),
     });
     if (!response.ok) {
       const errorBody = await response.text();

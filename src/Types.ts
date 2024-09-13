@@ -39,3 +39,9 @@ export interface PartidaBackend {
   turnoActual: number;
   estado: string;
 }
+
+export interface Usuario {
+  id: number;
+  username: string;
+  email: string;
+}
