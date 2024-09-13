@@ -230,3 +230,9 @@ a.secondary {
   cursor: pointer;
   border-radius: 4px;
 }
+
+@media (min-width: 601px) {
+  .playerInfo {
+    margin-top: 10px;
+  }
+}
