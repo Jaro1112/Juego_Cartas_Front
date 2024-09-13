@@ -10,7 +10,7 @@ interface PartidaEvent {
 
 let client: Client | null = null;
 
-export function connectWebSocket(onConnect: () => void) {
+export function connectWebSocket(onConnect: () => void, onError: () => void) {
   client = new Client({
     brokerURL: API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws',
     onConnect: () => {
@@ -20,6 +20,7 @@ export function connectWebSocket(onConnect: () => void) {
     onStompError: (frame) => {
       console.error('Broker reported error: ' + frame.headers['message']);
       console.error('Additional details: ' + frame.body);
+      onError();
     },
   });
   client.activate();

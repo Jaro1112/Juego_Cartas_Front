@@ -89,16 +89,23 @@ export default function Home() {
         throw new Error('No se pudo obtener un ID de usuario válido');
       }
 
-      connectWebSocket(() => {
-        subscribeToEmparejamiento((partida) => {
-          if (partida) {
-            handlePartidaIniciada(partida);
-          }
-        });
-        buscarOponente(nuevoUsuario.id, (remainingTime) => {
-          setTiempoEspera(remainingTime);
-        });
-      });
+      connectWebSocket(
+        () => {
+          subscribeToEmparejamiento((partida) => {
+            if (partida) {
+              handlePartidaIniciada(partida);
+            }
+          });
+          buscarOponente(nuevoUsuario.id, (remainingTime) => {
+            setTiempoEspera(remainingTime);
+          });
+        },
+        () => {
+          console.error('Error al conectar WebSocket en handleStartGame');
+          setBuscandoOponente(false);
+          setTiempoEspera(0);
+        }
+      );
 
       // Esperar 30 segundos antes de iniciar la partida con un bot
       searchTimeoutRef.current = setTimeout(async () => {
@@ -274,9 +281,14 @@ export default function Home() {
         setGameState(null);
         setShowMenu(true);
         disconnectWebSocket();
-        connectWebSocket(() => {
-          console.log('WebSocket reconectado después de rendirse');
-        });
+        connectWebSocket(
+          () => {
+            console.log('WebSocket reconectado después de rendirse');
+          },
+          () => {
+            console.error('Error al reconectar WebSocket después de rendirse');
+          }
+        );
       } catch (error) {
         console.error('Error al rendirse:', error);
         alert('Hubo un error al intentar rendirse. Por favor, intenta de nuevo.');
@@ -285,9 +297,17 @@ export default function Home() {
   };
 
   useEffect(() => {
-    connectWebSocket(() => {
-      console.log('WebSocket conectado');
-    });
+    const connectWithRetry = () => {
+      connectWebSocket(() => {
+        console.log('WebSocket conectado');
+      }, () => {
+        console.log('Error al conectar WebSocket, reintentando en 5 segundos...');
+        setTimeout(connectWithRetry, 5000);
+      });
+    };
+  
+    connectWithRetry();
+  
     return () => {
       disconnectWebSocket();
     };
