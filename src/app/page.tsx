@@ -10,7 +10,7 @@ import LoginRegister from '../components/LoginRegister';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { EfectoTipo, Card, Player, GameState, Usuario, PartidaBackend, PartidaWebSocket } from '../Types';
 import { iniciarPartida, jugarCarta, robarCarta, crearOObtenerUsuario, rendirse } from '../api/gameApi';
-import { connectWebSocket, disconnectWebSocket, subscribeToEmparejamiento, buscarOponente } from '../api/websocket';
+import { connectWebSocket, disconnectWebSocket, subscribeToEmparejamiento, buscarOponente, subscribeToPartida } from '../api/websocket';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const efectos: Record<EfectoTipo, (state: GameState, currentPlayer: 'player1' | 'player2', otherPlayer: 'player1' | 'player2') => GameState> = {
@@ -117,33 +117,35 @@ export default function Home() {
   const handlePartidaIniciada = (partida: PartidaBackend | PartidaWebSocket) => {
     setBuscandoOponente(false);
     setTiempoEspera(0);
-
+  
     if (!partida || !partida.id) {
       throw new Error('La respuesta del servidor no contiene los datos esperados');
     }
-
+  
     const newGameState: GameState = {
       id: partida.id,
       player1: { 
+        id: partida.jugador1.id,
         name: partida.jugador1.username, 
-        life: 20,
+        life: 'vida' in partida.jugador1 ? partida.jugador1.vida ?? 20 : 20,
         hand: 'cartasJugador1' in partida ? partida.cartasJugador1 : [], 
         deck: [] 
       },
       player2: { 
+        id: partida.jugador2.id,
         name: partida.jugador2.username, 
-        life: 20,
+        life: 'vida' in partida.jugador2 ? partida.jugador2.vida ?? 20 : 20,
         hand: 'cartasJugador2' in partida ? partida.cartasJugador2 : [], 
         deck: [] 
       },
-      currentTurn: typeof partida.turnoActual === 'string' ? parseInt(partida.turnoActual) : partida.turnoActual,
+      currentTurn: partida.turnoActual,
       log: [],
       ganador: null,
       playedCards: { player1: null, player2: null }
     };
-
+  
     setGameState(newGameState);
-    setShowMenu(false);
+    setShowMenu(false);   
   };
 
   const handleShowRules = () => {
@@ -256,25 +258,8 @@ export default function Home() {
   const handleSurrender = async () => {
     if (gameState && usuario) {
       try {
-        const result = await rendirse(gameState.id, usuario.id);
-        console.log('Resultado de la rendición:', result);
-        setGameState(prevState => {
-          if (!prevState) return null;
-          const surrenderingPlayer = prevState.player1.name === usuario.username ? 'player1' : 'player2';
-          const winningPlayer = surrenderingPlayer === 'player1' ? 'player2' : 'player1';
-          return {
-            ...prevState,
-            player1: {
-              ...prevState.player1,
-              life: surrenderingPlayer === 'player1' ? 0 : prevState.player1.life
-            },
-            player2: {
-              ...prevState.player2,
-              life: surrenderingPlayer === 'player2' ? 0 : prevState.player2.life
-            },
-            ganador: winningPlayer
-          };
-        });
+        await rendirse(gameState.id, usuario.id);
+        // La actualización del estado se manejará en el callback de subscribeToPartida
       } catch (error) {
         console.error('Error al rendirse:', error);
         alert('Hubo un error al intentar rendirse. Por favor, intenta de nuevo.');
@@ -290,6 +275,33 @@ export default function Home() {
       disconnectWebSocket();
     };
   }, []);
+
+  useEffect(() => {
+    if (gameState) {
+      subscribeToPartida(gameState.id, (data) => {
+        if (data.tipo === 'RENDICION') {
+          const surrenderingPlayerId = data.jugadorRendidoId;
+          setGameState(prevState => {
+            if (!prevState) return null;
+            const surrenderingPlayer = prevState.player1.id === surrenderingPlayerId ? 'player1' : 'player2';
+            const winningPlayer = surrenderingPlayer === 'player1' ? 'player2' : 'player1';
+            return {
+              ...prevState,
+              player1: {
+                ...prevState.player1,
+                life: surrenderingPlayer === 'player1' ? 0 : prevState.player1.life
+              },
+              player2: {
+                ...prevState.player2,
+                life: surrenderingPlayer === 'player2' ? 0 : prevState.player2.life
+              },
+              ganador: winningPlayer
+            };
+          });
+        }
+      });;
+    }
+  }, [gameState]);
 
   if (!usuario) {
     return <LoginRegister onLogin={handleLogin} />;

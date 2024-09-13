@@ -8,6 +8,7 @@ export interface Card {
 }
 
 export interface Player {
+  id: number;
   name: string;
   life: number;
   hand: Card[];
@@ -24,16 +25,16 @@ export interface GameState {
   playedCards: { player1: Card | null, player2: Card | null };
 }
 
+interface Jugador {
+  id: number;
+  username: string;
+  vida?: number;
+}
+
 export interface PartidaBackend {
   id: number;
-  jugador1: {
-    username: string;
-    vida: number;
-  };
-  jugador2: {
-    username: string;
-    vida: number;
-  };
+  jugador1: Jugador;
+  jugador2: Jugador;
   cartasJugador1: Card[];
   cartasJugador2: Card[];
   turnoActual: number;
@@ -48,15 +49,9 @@ export interface Usuario {
 
 export interface PartidaWebSocket {
   id: number;
-  jugador1: {
-    id: number;
-    username: string;
-  };
-  jugador2: {
-    id: number;
-    username: string;
-  };
-  cartasJugador1: Card[];
-  cartasJugador2: Card[];
-  turnoActual: string;
+  turnoActual: number;
+  jugador1: Jugador;
+  jugador2: Jugador;
+  tipo: string;
+  jugadorRendidoId?: number;
 }

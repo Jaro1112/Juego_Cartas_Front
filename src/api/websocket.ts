@@ -2,6 +2,12 @@ import { Client } from '@stomp/stompjs';
 import { API_BASE_URL } from '../config';
 import { PartidaWebSocket } from '../Types';
 
+interface PartidaEvent {
+  tipo: string;
+  jugadorRendidoId?: number;
+  // Añade aquí otras propiedades que pueda tener el evento
+}
+
 let client: Client | null = null;
 
 export function connectWebSocket(onConnect: () => void) {
@@ -39,6 +45,15 @@ export function buscarOponente(jugadorId: number) {
     client.publish({
       destination: '/app/buscarOponente',
       body: JSON.stringify(jugadorId),
+    });
+  }
+}
+
+export function subscribeToPartida(partidaId: number, callback: (data: PartidaEvent) => void) {
+  if (client) {
+    client.subscribe(`/topic/partida/${partidaId}`, (message) => {
+      const data = JSON.parse(message.body) as PartidaEvent;
+      callback(data);
     });
   }
 }
