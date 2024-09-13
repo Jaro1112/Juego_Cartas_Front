@@ -66,27 +66,21 @@ export default function Home() {
 
   const handleStartGame = async () => {
     try {
-      if (!usuario) {
-        throw new Error('No hay usuario logueado');
+      if (!usuario || !usuario.username) {
+        throw new Error('No hay usuario logueado o falta el nombre de usuario');
       }
 
-      let partida;
-      if (!usuario.id) {
-        console.log('Creando o obteniendo usuario...');
-        const nuevoUsuario = await crearOObtenerUsuario(usuario.username);
-        setUsuario(nuevoUsuario);
-        console.log('Usuario creado/obtenido:', nuevoUsuario);
-        
-        if (!nuevoUsuario.id) {
-          throw new Error('No se pudo obtener un ID de usuario válido');
-        }
-        
-        console.log('Iniciando partida con usuario ID:', nuevoUsuario.id);
-        partida = await iniciarPartida(nuevoUsuario.id);
-      } else {
-        console.log('Iniciando partida con usuario ID:', usuario.id);
-        partida = await iniciarPartida(usuario.id);
+      console.log('Creando o obteniendo usuario...');
+      const nuevoUsuario = await crearOObtenerUsuario(usuario.username);
+      setUsuario(nuevoUsuario);
+      console.log('Usuario creado/obtenido:', nuevoUsuario);
+
+      if (!nuevoUsuario.id) {
+        throw new Error('No se pudo obtener un ID de usuario válido');
       }
+
+      console.log('Iniciando partida con usuario ID:', nuevoUsuario.id);
+      const partida = await iniciarPartida(nuevoUsuario.id);
 
       console.log('Partida iniciada:', partida);
 
@@ -113,12 +107,12 @@ export default function Home() {
         ganador: null,
         playedCards: { player1: null, player2: null }
       };
-      console.log('Nuevo estado del juego:', newGameState);
+
       setGameState(newGameState);
       setShowMenu(false);
-      console.log('Menú oculto, juego iniciado');
     } catch (error) {
       console.error('Error al iniciar la partida:', error);
+      // Aquí puedes manejar el error, por ejemplo, mostrando un mensaje al usuario
     }
   };
 
