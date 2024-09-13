@@ -8,12 +8,12 @@ export const iniciarPartida = async (jugador1Id: number, jugador2Id: number) => 
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa('123:123')
       },
       body: JSON.stringify({ jugador1Id, jugador2Id }),
     });
     if (!response.ok) {
       const errorBody = await response.text();
+      console.error('Respuesta del servidor no exitosa:', response.status, errorBody);
       throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
     }
     const data = await response.json();
@@ -21,9 +21,6 @@ export const iniciarPartida = async (jugador1Id: number, jugador2Id: number) => 
     return data;
   } catch (error) {
     console.error('Error detallado en iniciarPartida:', error);
-    if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      console.error('Error de red: Asegúrate de que el backend esté en funcionamiento y accesible.');
-    }
     throw error;
   }
 };

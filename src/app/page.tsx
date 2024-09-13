@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import GameBoard from '../components/GameBoard';
 import MainMenu from '../components/MainMenu';
 import Rules from '../components/Rules';
@@ -8,6 +8,7 @@ import Rules from '../components/Rules';
 import { EfectoTipo, Card, Player, GameState } from '../Types';
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { iniciarPartida, jugarCarta, robarCarta } from '../api/gameApi';
+import { connectWebSocket, disconnectWebSocket } from '../api/websocket';
 
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const efectos: Record<EfectoTipo, (state: GameState, currentPlayer: 'player1' | 'player2', otherPlayer: 'player1' | 'player2') => GameState> = {
@@ -184,6 +185,13 @@ export default function Home() {
 
     return deck.sort(() => Math.random() - 0.5); // Mezclar el mazo
   };
+
+  useEffect(() => {
+    connectWebSocket();
+    return () => {
+      disconnectWebSocket();
+    };
+  }, []);
 
   if (showMenu) {
     return <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />;
