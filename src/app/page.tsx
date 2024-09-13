@@ -7,12 +7,11 @@ import MainMenu from '../components/MainMenu';
 import Rules from '../components/Rules';
 import LoginRegister from '../components/LoginRegister';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EfectoTipo, Card, Player, GameState, Usuario } from '../Types';
- // eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { EfectoTipo, Card, Player, GameState, Usuario, PartidaBackend } from '../Types';
 import { iniciarPartida, jugarCarta, robarCarta, crearOObtenerUsuario, rendirse } from '../api/gameApi';
 import { connectWebSocket, disconnectWebSocket } from '../api/websocket';
 
- // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const efectos: Record<EfectoTipo, (state: GameState, currentPlayer: 'player1' | 'player2', otherPlayer: 'player1' | 'player2') => GameState> = {
   QUEMAR: (state, _currentPlayer, otherPlayer) => {
     return {
@@ -74,18 +73,8 @@ export default function Home() {
       }
 
       setBuscandoOponente(true);
-      setTiempoEspera(0);
+      setTiempoEspera(30);
       setSearchCancelled(false);
-
-      const intervalId = setInterval(() => {
-        setTiempoEspera((prevTiempo) => {
-          if (prevTiempo >= 30 || searchCancelled) {
-            clearInterval(intervalId);
-            return prevTiempo;
-          }
-          return prevTiempo + 1;
-        });
-      }, 1000);
 
       console.log('Creando o obteniendo usuario...');
       const nuevoUsuario = await crearOObtenerUsuario(usuario.username);
@@ -96,50 +85,72 @@ export default function Home() {
         throw new Error('No se pudo obtener un ID de usuario válido');
       }
 
-      console.log('Iniciando partida con usuario ID:', nuevoUsuario.id);
-      const partida = await iniciarPartida(nuevoUsuario.id);
+      const intervalId = setInterval(() => {
+        setTiempoEspera((prevTiempo) => {
+          if (prevTiempo <= 0 || searchCancelled) {
+            clearInterval(intervalId);
+            if (!searchCancelled) {
+              iniciarPartidaConBot(nuevoUsuario.id);
+            }
+            return 0;
+          }
+          return prevTiempo - 1;
+        });
+      }, 1000);
 
-      clearInterval(intervalId);
-      setBuscandoOponente(false);
+      // Esperar 30 segundos antes de iniciar la búsqueda real
+      setTimeout(async () => {
+        if (!searchCancelled) {
+          clearInterval(intervalId);
+          console.log('Iniciando partida con usuario ID:', nuevoUsuario.id);
+          const partida = await iniciarPartida(nuevoUsuario.id);
+          handlePartidaIniciada(partida);
+        }
+      }, 30000);
 
-      if (searchCancelled) {
-        return; // Si la búsqueda fue cancelada, no inicies la partida
-      }
-
-      console.log('Partida iniciada:', partida);
-
-      if (!partida || !partida.id) {
-        throw new Error('La respuesta del servidor no contiene los datos esperados');
-      }
-
-      const newGameState = {
-        id: partida.id,
-        player1: { 
-          name: partida.jugador1.username, 
-          life: partida.jugador1.vida, 
-          hand: partida.cartasJugador1 || [], 
-          deck: [] 
-        },
-        player2: { 
-          name: partida.jugador2.username, 
-          life: partida.jugador2.vida, 
-          hand: partida.cartasJugador2 || [], 
-          deck: [] 
-        },
-        currentTurn: partida.turnoActual,
-        log: [],
-        ganador: null,
-        playedCards: { player1: null, player2: null }
-      };
-
-      setGameState(newGameState);
-      setShowMenu(false);
     } catch (error) {
       console.error('Error al iniciar la partida:', error);
       setBuscandoOponente(false);
       setTiempoEspera(0);
-      // Aquí puedes manejar el error, por ejemplo, mostrando un mensaje al usuario
     }
+  };
+
+  const iniciarPartidaConBot = async (userId: number) => {
+    console.log('Iniciando partida con bot para usuario ID:', userId);
+    const partida = await iniciarPartida(userId);
+    handlePartidaIniciada(partida);
+  };
+
+  const handlePartidaIniciada = (partida: PartidaBackend) => {
+    setBuscandoOponente(false);
+    setTiempoEspera(0);
+
+    if (!partida || !partida.id) {
+      throw new Error('La respuesta del servidor no contiene los datos esperados');
+    }
+
+    const newGameState: GameState = {
+      id: partida.id,
+      player1: { 
+        name: partida.jugador1.username, 
+        life: partida.jugador1.vida, 
+        hand: partida.cartasJugador1 || [], 
+        deck: [] 
+      },
+      player2: { 
+        name: partida.jugador2.username, 
+        life: partida.jugador2.vida, 
+        hand: partida.cartasJugador2 || [], 
+        deck: [] 
+      },
+      currentTurn: partida.turnoActual,
+      log: [],
+      ganador: null,
+      playedCards: { player1: null, player2: null }
+    };
+
+    setGameState(newGameState);
+    setShowMenu(false);
   };
 
   const handleShowRules = () => {
@@ -177,8 +188,7 @@ export default function Home() {
       console.error('Error al robar la carta:', error);
     }
   };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   const calcularDaño = (cartaAtacante: Card, cartaDefensora: Card | null): number => {
     let daño = cartaAtacante.poder;
     
@@ -216,7 +226,6 @@ export default function Home() {
     return state;
   };
 
-  // Función para crear el mazo inicial
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const createInitialDeck = (): Card[] => {
     const elementos = ['FUEGO', 'AGUA', 'TIERRA', 'AIRE', 'RAYO'];
