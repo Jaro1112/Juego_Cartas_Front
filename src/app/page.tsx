@@ -61,6 +61,7 @@ export default function Home() {
   const [tiempoEspera, setTiempoEspera] = useState(0);
   const [searchCancelled, setSearchCancelled] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleLogin = (usuarioLogueado: Usuario) => {
     setUsuario(usuarioLogueado);
@@ -86,11 +87,13 @@ export default function Home() {
         throw new Error('No se pudo obtener un ID de usuario válido');
       }
 
-      const intervalId = setInterval(() => {
+      intervalIdRef.current = setInterval(() => {
         setTiempoEspera((prevTiempo) => {
           if (prevTiempo <= 0 || searchCancelled) {
-            clearInterval(intervalId);
-            if (!searchCancelled) {
+            if (intervalIdRef.current) {
+              clearInterval(intervalIdRef.current);
+            }
+            if (!searchCancelled && prevTiempo <= 0) {
               iniciarPartidaConBot(nuevoUsuario.id);
             }
             return 0;
@@ -102,7 +105,9 @@ export default function Home() {
       // Esperar 30 segundos antes de iniciar la búsqueda real
       searchTimeoutRef.current = setTimeout(async () => {
         if (!searchCancelled) {
-          clearInterval(intervalId);
+          if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+          }
           console.log('Iniciando partida con usuario ID:', nuevoUsuario.id);
           const partida = await iniciarPartida(nuevoUsuario.id);
           handlePartidaIniciada(partida);
@@ -162,6 +167,7 @@ export default function Home() {
   const handleBackToMenu = () => {
     setShowRules(false);
     setShowMenu(true);
+    setGameState(null);
   };
 
   const handlePlayCard = async (playerId: number, cardId: number) => {
@@ -254,6 +260,10 @@ export default function Home() {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
+    // Limpiar el intervalo de cuenta regresiva
+    if (intervalIdRef.current) {
+      clearInterval(intervalIdRef.current);
+    }
   };
 
   const handleSurrender = async () => {
@@ -333,6 +343,7 @@ export default function Home() {
             ganador={gameState.ganador}
             playedCards={gameState.playedCards}
             onSurrender={handleSurrender}
+            onBackToMenu={handleBackToMenu}
           />
         ) : (
           <>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Player, Card } from '../Types';
 import Hand from './Hand';
 import PlayerInfo from './PlayerInfo';
@@ -17,13 +17,33 @@ interface GameBoardProps {
     player2: Card | null;
   };
   onSurrender: () => void;
+  onBackToMenu: () => void;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({ 
-  player1, player2, currentTurn, onPlayCard, onDrawCard, log, ganador, playedCards, onSurrender 
+  player1, player2, currentTurn, onPlayCard, onDrawCard, log, ganador, playedCards, onSurrender, onBackToMenu 
 }) => {
+  const [showResult, setShowResult] = useState(false);
+
+  useEffect(() => {
+    if (ganador) {
+      setShowResult(true);
+      setTimeout(() => {
+        setShowResult(false);
+        onBackToMenu();
+      }, 3000);
+    }
+  }, [ganador, onBackToMenu]);
+
   return (
     <div className="flex flex-col items-center justify-between h-screen p-4 bg-green-100">
+      {showResult && (
+        <div className={`fixed inset-0 flex items-center justify-center z-50 ${ganador === 'player1' ? 'bg-green-500' : 'bg-red-500'}`}>
+          <h1 className="text-6xl font-bold text-white">
+            {ganador === 'player1' ? 'Ganaste!' : 'Perdiste!'}
+          </h1>
+        </div>
+      )}
       <PlayerInfo name={player2.name} life={player2.life} isCurrentTurn={currentTurn === 2} />
       <Hand cards={player2.hand} onPlayCard={(cardId) => onPlayCard(2, cardId)} isCurrentTurn={currentTurn === 2} />
       
