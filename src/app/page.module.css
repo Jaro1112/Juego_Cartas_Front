@@ -192,3 +192,21 @@ a.secondary {
 .playerName {
   font-style: italic;
 }
+
+.contentWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .contentWrapper {
+    flex-direction: column;
+  }
+
+  .playerInfo {
+    margin-top: 20px;
+    order: 2;
+  }
+}

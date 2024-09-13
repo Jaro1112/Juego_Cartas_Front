@@ -225,24 +225,28 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className={styles.playerInfo}>
-        <span className={styles.playerLabel}>Jugador:</span>
-        <span className={styles.playerName}>{usuario.username}</span>
+      <div className={styles.contentWrapper}>
+        {gameState ? (
+          <GameBoard 
+            player1={gameState.player1}
+            player2={gameState.player2}
+            currentTurn={gameState.currentTurn}
+            onPlayCard={handlePlayCard}
+            onDrawCard={handleDrawCard}
+            log={gameState.log}
+            ganador={gameState.ganador}
+            playedCards={gameState.playedCards}
+          />
+        ) : (
+          <>
+            <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />
+            <div className={styles.playerInfo}>
+              <span className={styles.playerLabel}>Jugador:</span>
+              <span className={styles.playerName}>{usuario.username}</span>
+            </div>
+          </>
+        )}
       </div>
-      {gameState ? (
-        <GameBoard 
-          player1={gameState.player1}
-          player2={gameState.player2}
-          currentTurn={gameState.currentTurn}
-          onPlayCard={handlePlayCard}
-          onDrawCard={handleDrawCard}
-          log={gameState.log}
-          ganador={gameState.ganador}
-          playedCards={gameState.playedCards}
-        />
-      ) : (
-        <p>Cargando juego...</p>
-      )}
     </main>
   );
 }
