@@ -1,5 +1,6 @@
 'use client';
 
+import styles from './page.module.css';
 import React, { useState, useEffect } from 'react';
 import GameBoard from '../components/GameBoard';
 import MainMenu from '../components/MainMenu';
@@ -208,8 +209,11 @@ export default function Home() {
 
   if (showMenu) {
     return (
-      <div>
-        <p>Usuario: {usuario.username}</p>
+      <div className={styles.container}>
+        <div className={styles.playerInfo}>
+          <span className={styles.playerLabel}>Jugador:</span>
+          <span className={styles.playerName}>{usuario.username}</span>
+        </div>
         <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />
       </div>
     );
@@ -221,7 +225,10 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <p>Usuario: {usuario.username}</p>
+      <div className={styles.playerInfo}>
+        <span className={styles.playerLabel}>Jugador:</span>
+        <span className={styles.playerName}>{usuario.username}</span>
+      </div>
       {gameState ? (
         <GameBoard 
           player1={gameState.player1}
