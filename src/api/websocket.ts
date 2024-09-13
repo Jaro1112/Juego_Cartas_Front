@@ -10,22 +10,20 @@ interface PartidaEvent {
 
 let client: Client | null = null;
 
+let isSubscribedToEmparejamiento = false;
+
 export function connectWebSocket(onConnect: () => void, onError: () => void) {
   client = new Client({
     brokerURL: API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws',
     onConnect: () => {
       console.log('Connected to WebSocket');
-      if (client) {
+      if (client && !isSubscribedToEmparejamiento) {
         client.subscribe('/topic/emparejamiento', () => {
           console.log('Subscribed to /topic/emparejamiento');
+          isSubscribedToEmparejamiento = true;
         });
-        setTimeout(() => {
-          onConnect();
-        }, 1000);
-      } else {
-        console.error('Client is null after connection');
-        onError();
       }
+      onConnect();
     },
     onStompError: (frame) => {
       console.error('Broker reported error: ' + frame.headers['message']);
@@ -44,12 +42,13 @@ export function disconnectWebSocket() {
 }
 
 export function subscribeToEmparejamiento(callback: (partida: PartidaWebSocket) => void) {
-  if (client) {
+  if (client && !isSubscribedToEmparejamiento) {
     client.subscribe('/topic/emparejamiento', (message) => {
       const partida = JSON.parse(message.body) as PartidaWebSocket;
       callback(partida);
     });
-  } else {
+    isSubscribedToEmparejamiento = true;
+  } else if (!client) {
     console.error('Cannot subscribe: WebSocket client is not initialized');
   }
 }
