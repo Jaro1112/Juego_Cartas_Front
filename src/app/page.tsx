@@ -315,7 +315,7 @@ export default function Home() {
         {!buscandoOponente ? (
           <MainMenu onStartGame={handleStartGame} onShowRules={handleShowRules} />
         ) : (
-          <div className={styles.buscandoOponente}>
+          <div className={`${styles.buscandoOponente} ${styles.container}`}>
             <p>Encontrando Oponente</p>
             <p>Tiempo de espera: {tiempoEspera} segundos</p>
             <button onClick={handleCancelSearch}>Cancelar</button>
