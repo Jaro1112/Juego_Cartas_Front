@@ -88,3 +88,14 @@ export const crearOObtenerUsuario = async (username: string) => {
     throw error;
   }
 };
+
+export const rendirse = async (partidaId: number, jugadorId: number) => {
+  const response = await fetch(`${API_BASE_URL}/api/juego/rendirse`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ partidaId, jugadorId }),
+  });
+  return response.json();
+};

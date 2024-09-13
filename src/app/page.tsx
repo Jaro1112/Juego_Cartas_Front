@@ -9,7 +9,7 @@ import LoginRegister from '../components/LoginRegister';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { EfectoTipo, Card, Player, GameState, Usuario } from '../Types';
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { iniciarPartida, jugarCarta, robarCarta, crearOObtenerUsuario } from '../api/gameApi';
+import { iniciarPartida, jugarCarta, robarCarta, crearOObtenerUsuario, rendirse } from '../api/gameApi';
 import { connectWebSocket, disconnectWebSocket } from '../api/websocket';
 
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -234,6 +234,34 @@ export default function Home() {
     setTiempoEspera(0);
   };
 
+  const handleSurrender = async () => {
+    if (gameState && usuario) {
+      try {
+        await rendirse(gameState.id, usuario.id);
+        // Actualizar el estado del juego para reflejar la rendición
+        setGameState(prevState => {
+          if (!prevState) return null;
+          const surrenderingPlayer = prevState.player1.name === usuario.username ? 'player1' : 'player2';
+          const winningPlayer = surrenderingPlayer === 'player1' ? 'player2' : 'player1';
+          return {
+            ...prevState,
+            player1: {
+              ...prevState.player1,
+              life: surrenderingPlayer === 'player1' ? 0 : prevState.player1.life
+            },
+            player2: {
+              ...prevState.player2,
+              life: surrenderingPlayer === 'player2' ? 0 : prevState.player2.life
+            },
+            ganador: winningPlayer
+          };
+        });
+      } catch (error) {
+        console.error('Error al rendirse:', error);
+      }
+    }
+  };
+
   useEffect(() => {
     connectWebSocket();
     return () => {
@@ -289,6 +317,7 @@ export default function Home() {
             log={gameState.log}
             ganador={gameState.ganador}
             playedCards={gameState.playedCards}
+            onSurrender={handleSurrender}
           />
         ) : (
           <>

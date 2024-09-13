@@ -16,10 +16,11 @@ interface GameBoardProps {
     player1: Card | null;
     player2: Card | null;
   };
+  onSurrender: () => void;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({ 
-  player1, player2, currentTurn, onPlayCard, onDrawCard, log, ganador, playedCards 
+  player1, player2, currentTurn, onPlayCard, onDrawCard, log, ganador, playedCards, onSurrender 
 }) => {
   return (
     <div className="flex flex-col items-center justify-between h-screen p-4 bg-green-100">
@@ -36,6 +37,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         >
           Robar Carta
         </button>
+        <button onClick={onSurrender}>Rendirse</button>
       </div>
       
       <Hand cards={player1.hand} onPlayCard={(cardId) => onPlayCard(1, cardId)} isCurrentTurn={currentTurn === 1} />
