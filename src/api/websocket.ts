@@ -2,7 +2,7 @@ import { Client } from '@stomp/stompjs';
 import { API_BASE_URL } from '../config';
 
 const client = new Client({
-  brokerURL: `${API_BASE_URL.replace('https', 'wss')}/ws`,
+  brokerURL: `wss://${API_BASE_URL.replace('https://', '')}/ws`,
   connectHeaders: {
     login: '123',
     passcode: '123',
