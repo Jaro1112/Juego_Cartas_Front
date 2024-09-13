@@ -269,8 +269,8 @@ export default function Home() {
   const handleSurrender = async () => {
     if (gameState && usuario) {
       try {
-        await rendirse(gameState.id, usuario.id);
-        // Actualizar el estado del juego para reflejar la rendición
+        const result = await rendirse(gameState.id, usuario.id);
+        console.log('Resultado de la rendición:', result);
         setGameState(prevState => {
           if (!prevState) return null;
           const surrenderingPlayer = prevState.player1.name === usuario.username ? 'player1' : 'player2';
@@ -290,6 +290,7 @@ export default function Home() {
         });
       } catch (error) {
         console.error('Error al rendirse:', error);
+        alert('Hubo un error al intentar rendirse. Por favor, intenta de nuevo.');
       }
     }
   };

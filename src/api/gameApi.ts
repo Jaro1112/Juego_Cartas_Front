@@ -97,5 +97,9 @@ export const rendirse = async (partidaId: number, jugadorId: number) => {
     },
     body: JSON.stringify({ partidaId, jugadorId }),
   });
-  return response.json();
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const text = await response.text();
+  return text ? JSON.parse(text) : {};
 };
