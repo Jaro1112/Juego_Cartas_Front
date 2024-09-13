@@ -5,6 +5,8 @@
   justify-content: center;
   height: 100vh;
   background-color: #f0f0f0;
+  text-align: center;
+  padding: 0 20px;
 }
 
 .mainMenu h1 {
@@ -27,4 +29,11 @@
 
 .mainMenu button:hover {
   background-color: #45a049;
+}
+
+@media (max-width: 600px) {
+  .mainMenu h1 {
+    text-align: center;
+    padding: 0 20px;
+  }
 }
