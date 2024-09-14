@@ -116,7 +116,6 @@ export default function Home() {
       // Esperar 30 segundos antes de iniciar la partida con un bot
       searchTimeoutRef.current = setTimeout(async () => {
         if (!searchCancelled) {
-          disconnectWebSocket();
           console.log('Iniciando partida con bot para usuario ID:', nuevoUsuario.id);
           const partida = await iniciarPartida(nuevoUsuario.id);
           handlePartidaIniciada(partida);

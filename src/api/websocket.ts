@@ -74,12 +74,14 @@ export function buscarOponente(jugadorId: number, onTimeUpdate: (remainingTime: 
 }
 
 export function subscribeToPartida(partidaId: number, callback: (data: PartidaEvent) => void): () => void {
-  if (client) {
+  if (client && client.connected) {
     const subscription = client.subscribe(`/topic/partida/${partidaId}`, (message) => {
       const data = JSON.parse(message.body) as PartidaEvent;
       callback(data);
     });
     return () => subscription.unsubscribe();
+  } else {
+    console.error('Cannot subscribe: WebSocket client is not connected');
+    return () => {};
   }
-  return () => {};
 }
