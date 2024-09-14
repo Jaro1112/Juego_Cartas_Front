@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Player, Card } from '../Types';
 import Hand from './Hand';
 import PlayerInfo from './PlayerInfo';
@@ -21,53 +21,66 @@ interface GameBoardProps {
   onBackToMenu: () => void;
 }
 
-const GameBoard: React.FC<GameBoardProps> = ({ 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-  currentPlayer, opponent, currentTurn, onPlayCard, onDrawCard, log, ganador, playedCards, onSurrender, onBackToMenu 
+const GameBoard: React.FC<GameBoardProps> = ({
+  currentPlayer,
+  opponent,
+  currentTurn,
+  onPlayCard,
+  onDrawCard,
+  log,
+  ganador,
+  playedCards,
+  onSurrender,
+  onBackToMenu
 }) => {
-  const [showResult, setShowResult] = useState(false);
-
-  useEffect(() => {
-    if (ganador) {
-      setShowResult(true);
-    }
-  }, [ganador]);
-
   return (
     <div className={styles.gameBoard}>
-      <button onClick={onBackToMenu} className={styles.backButton}>Volver al Menú</button>
-      <button onClick={onSurrender} className={styles.surrenderButton}>Rendirse</button>
-      
-      <PlayerInfo name={opponent.name} life={opponent.life} isCurrentTurn={currentTurn !== currentPlayer.id} />
-      <Hand cards={opponent.hand} onPlayCard={() => {}} isCurrentTurn={false} isOpponent={true} />
-      
+      <PlayerInfo name={opponent.name} life={opponent.life} isCurrentTurn={currentTurn === opponent.id} />
       <div className={styles.playArea}>
-        <div className={styles.playedCard}>
-        {playedCards.opponent && <CardComponent {...playedCards.opponent} onSelect={() => {}} isSelected={false} isPlayed={true} />}
-        </div>
-        <div className={styles.playedCard}>
-        {playedCards.currentPlayer && <CardComponent {...playedCards.currentPlayer} onSelect={() => {}} isSelected={false} isPlayed={true} />}
+        <div className={styles.playedCards}>
+          {playedCards.opponent && (
+            <CardComponent 
+              {...playedCards.opponent}
+              onSelect={() => {}}
+              isSelected={false}
+              isOpponent={true}
+            />
+          )}
+          {playedCards.currentPlayer && (
+            <CardComponent 
+              {...playedCards.currentPlayer}
+              onSelect={() => {}}
+              isSelected={false}
+              isOpponent={false}
+            />
+          )}
         </div>
       </div>
-      
-      <Hand cards={currentPlayer.hand} onPlayCard={(cardId) => onPlayCard(currentPlayer.id, cardId)} isCurrentTurn={currentTurn === currentPlayer.id} />
       <PlayerInfo name={currentPlayer.name} life={currentPlayer.life} isCurrentTurn={currentTurn === currentPlayer.id} />
-      
-      <div className={styles.logArea}>
+      <Hand
+          cards={currentPlayer.hand}
+          onPlayCard={(cardId) => onPlayCard(currentPlayer.id, cardId)}
+          isCurrentTurn={currentTurn === currentPlayer.id}
+          isOpponent={false}
+        />
+      <button onClick={() => onDrawCard(currentPlayer.id)} disabled={currentTurn !== currentPlayer.id}>
+        Robar carta
+      </button>
+      <button onClick={onSurrender}>Rendirse</button>
+      <button onClick={onBackToMenu}>Volver al menú</button>
+      <div className={styles.log}>
         {log.map((entry, index) => (
-          <p key={index} className={styles.logEntry}>{entry}</p>
+          <p key={index}>{entry}</p>
         ))}
       </div>
-      
-      {showResult && (
-        <div className={`${styles.resultOverlay} ${ganador === currentPlayer.id ? styles.winOverlay : styles.loseOverlay}`}>
-          <h1 className={styles.resultText}>
-            {ganador === currentPlayer.id ? '¡Ganaste!' : '¡Perdiste!'}
-          </h1>
+      {ganador !== null && (
+        <div className={styles.gameOver}>
+          <h2>Juego terminado</h2>
+          <p>Ganador: {ganador === currentPlayer.id ? currentPlayer.name : opponent.name}</p>
         </div>
       )}
     </div>
   );
-}
+};
 
 export default GameBoard;

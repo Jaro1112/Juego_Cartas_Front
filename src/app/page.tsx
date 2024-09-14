@@ -190,6 +190,19 @@ export default function Home() {
     try {
       const updatedGameState = await jugarCarta(gameState.id, playerId, cardId);
       setGameState(updatedGameState);
+      
+      // Limpiar las cartas jugadas después de 3 segundos
+      setTimeout(() => {
+        setGameState(prevState => {
+          if (prevState) {
+            return {
+              ...prevState,
+              playedCards: { currentPlayer: null, opponent: null }
+            };
+          }
+          return prevState;
+        });
+      }, 3000);
     } catch (error) {
       console.error('Error al jugar la carta:', error);
     }
